@@ -40,6 +40,7 @@
 'A task is a piece of work that an individual or team can do in 1-2 days': 'A task is a piece of work that an individual or team can do in 1-2 days',
 'ABOUT THIS MODULE': 'ABOUT THIS MODULE',
 'ACCESS DATA': 'ACCESS DATA',
+'ACTION REQUIRED': 'ACTION REQUIRED',
 'ANY': 'ANY',
 'API Key': 'API Key',
 'API is documented here': 'API is documented here',

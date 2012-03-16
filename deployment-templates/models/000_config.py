@@ -385,7 +385,7 @@ deployment_settings.security.archive_not_delete = True
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 #deployment_settings.hrm.email_required = False
 # Uncomment to hide the Staff resource
-#deployment_settings.hrm.show_staff = False
+deployment_settings.hrm.show_staff = False
 # Uncomment to hide the Volunteer resource
 #deployment_settings.hrm.show_vols = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
@@ -461,7 +461,7 @@ deployment_settings.modules = OrderedDict([
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
-            name_nice = T("Staff & Volunteers"),
+            name_nice = T("Volunteers"),
             description = T("Human Resource Management"),
             restricted = True,
             module_type = 2,
@@ -616,12 +616,12 @@ deployment_settings.modules = OrderedDict([
            restricted = False,
            module_type = 10,
        )),
-    #("cms", Storage(
-    #       name_nice = T("Content Management"),
-    #       description = T("Content Management System"),
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
+    ("cms", Storage(
+           name_nice = T("Content Management"),
+           description = T("Content Management System"),
+           restricted = True,
+           module_type = 10,
+       )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),
     #       description = T("Fire Station Management"),

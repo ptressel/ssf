@@ -34,7 +34,7 @@ deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
 
 # Uncomment this to request the Mobile Phone when a user registers
-deployment_settings.auth.registration_requests_mobile_phone = True
+#deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Mobile Phone selection during registration be mandatory
 #deployment_settings.auth.registration_mobile_phone_mandatory = True
 # Uncomment this to request the Organisation when a user registers
@@ -44,7 +44,7 @@ deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #deployment_settings.auth.registration_organisation_hidden = True
 # Uncomment this to request an image when users register
-#deployment_settings.auth.registration_requests_image = True
+deployment_settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
 # NB This requires Verification/Approval to be Off
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image

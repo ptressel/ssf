@@ -134,6 +134,8 @@ def index():
                                                  limitby=(0, 1)).first()
         if item:
             item = DIV(XML(item.body))
+        else:
+            item = ""
 
     # Menu Boxes
     datatable_ajax_source = ""

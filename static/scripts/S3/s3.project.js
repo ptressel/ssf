@@ -71,6 +71,8 @@ S3.project_task_update_fields = function () {
         //        selector.val(value_high).change();
         //    }, 1);
     });
+    // Don't hassle users about unsaved data just for these dropdown settings
+    S3ClearNavigateAwayConfirm();
 }
 
 $(document).ready(function() {

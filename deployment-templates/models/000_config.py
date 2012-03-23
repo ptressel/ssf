@@ -46,7 +46,7 @@ deployment_settings.auth.registration_requires_approval = False
 # Uncomment this to default the Organisation during registration
 deployment_settings.auth.registration_organisation_default = 1
 # Uncomment & populate these to set the default roelsd assigned to newly-registered users
-deployment_settings.auth.registration_roles = ["PROJECT_EDIT"]
+deployment_settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to request an image when users register
 deployment_settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details

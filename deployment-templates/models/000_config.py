@@ -64,8 +64,8 @@ deployment_settings.auth.openid = False
 deployment_settings.auth.always_notify_approver = True
 
 # Base settings
-deployment_settings.base.system_name = T("Sahana Eden Humanitarian Management Platform")
-deployment_settings.base.system_name_short = T("Sahana Eden")
+deployment_settings.base.system_name = T("The Sahana Sunflower: A Community Portal")
+deployment_settings.base.system_name_short = T("Sahana Sunflower")
 
 # Set this to the Public URL of the instance
 deployment_settings.base.public_url = "http://127.0.0.1:8000"
@@ -182,7 +182,7 @@ deployment_settings.L10n.religions = {
     "none":T("none"),
     "christian":T("Christian"),
     "muslim":T("Muslim"),
-    "jew":T("Jew"),
+    "jew":T("Jewish"),
     "buddhist":T("Buddhist"),
     "hindu":T("Hindu"),
     "bahai":T("Bahai"),

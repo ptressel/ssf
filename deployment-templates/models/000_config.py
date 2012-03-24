@@ -33,8 +33,8 @@ deployment_settings.security.self_registration = True
 deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
 
-# Uncomment this to request the user to opt in to email alerts
-deployment_settings.auth.opt_in_to_email = True
+# The name of the team that users may belong to if they are to receive email alerts 
+deployment_settings.auth.opt_in_team_list = ["General", "Update", "Meetings"]
 # Uncomment this to set the opt in default to True
 deployment_settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers

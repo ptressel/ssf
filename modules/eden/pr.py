@@ -618,7 +618,7 @@ class S3PersonModel(S3Model):
                                                  _title="%s|%s" % (T("Picture"),
                                                                    T("Upload an image file here.")))),
                              Field("opt_in",
-                                   "boolean",
+                                   "string", # list of mailing lists which link to teams
                                    default=False,
                                    label = T("Receive updates"),
                                    comment = DIV(DIV(_class="tooltip",

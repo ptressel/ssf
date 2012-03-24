@@ -1289,7 +1289,6 @@ class AuthS3(Auth):
                 first_name = user.first_name
                 last_name = user.last_name
                 email = user.email.lower()
-                opt_in = current.request.vars.get("opt_in", None)!=None
                 query = (ptable.first_name == first_name) & \
                         (ptable.last_name == last_name) & \
                         (ctable.pe_id == ptable.pe_id) & \
@@ -1339,6 +1338,10 @@ class AuthS3(Auth):
                 if pe_id:
 
                     # Create a new person record
+                    if current.request.vars.get("opt_in", None):
+                        opt_in = current.deployment_settings.get_auth_opt_in_team_list()
+                    else:
+                        opt_in = ""
                     new_id = ptable.insert(pe_id = pe_id,
                                            track_id = track_id,
                                            first_name = first_name,

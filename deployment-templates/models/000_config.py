@@ -44,7 +44,7 @@ deployment_settings.auth.registration_requires_approval = False
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #deployment_settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
-deployment_settings.auth.registration_organisation_default = 1
+deployment_settings.auth.registration_organisation_default = "Sahana Software Foundation"
 # Uncomment & populate these to set the default roelsd assigned to newly-registered users
 deployment_settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to request an image when users register
@@ -91,7 +91,10 @@ deployment_settings.base.migrate = True
 # 20+ Demo (Data required for a default demo)
 #     Each subsequent Demos can take any unique number >= 20
 #     The actual demo will be defined by the file demo_folders.cfg
-deployment_settings.base.prepopulate = 1
+deployment_settings.base.prepopulate = ["default/Default",
+                                        "default/SSF", 
+                                        "demo/SSF"
+                                        ]
 
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites

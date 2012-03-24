@@ -36,7 +36,7 @@ deployment_settings.auth.registration_requires_approval = False
 # The name of the team that users may belong to if they are to receive email alerts 
 deployment_settings.auth.opt_in_team_list = ["General", "Update", "Meetings"]
 # Uncomment this to set the opt in default to True
-#deployment_settings.auth.opt_in_default = True
+deployment_settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers
 #deployment_settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Mobile Phone selection during registration be mandatory

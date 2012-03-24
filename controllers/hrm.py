@@ -513,6 +513,10 @@ def person():
                         insertable = False,
                         editable = False,
                         deletable = False)
+        s3mgr.configure("hrm_bio",
+                        insertable = False,
+                        editable = False,
+                        deletable = False)
         s3mgr.configure("pr_group_membership",
                         insertable = False,
                         editable = False,
@@ -902,6 +906,7 @@ def hrm_rheader(r, tabs=[]):
                         (T("Positions"), "human_resource"),
                         (T("Teams"), "group_membership"),
                         (T("Assets"), "asset"),
+                        (T("Bio"), "bio"),
                        ]
             else:
                 # Configure for HR manager mode
@@ -922,6 +927,7 @@ def hrm_rheader(r, tabs=[]):
                         (T("Mission Record"), "experience"),
                         (T("Teams"), "group_membership"),
                         (T("Assets"), "asset"),
+                        (T("Bio"), "bio"),
                        ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
             person = r.record

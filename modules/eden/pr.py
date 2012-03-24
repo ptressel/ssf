@@ -547,7 +547,7 @@ class S3PersonModel(S3Model):
                                    default=False),
                              Field("first_name",
                                    notnull=True,
-                                   default="?",
+                                   default = "?" if current.auth.permission.format != "html" else "",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
                                    # http://eden.sahanafoundation.org/ticket/834
@@ -605,7 +605,7 @@ class S3PersonModel(S3Model):
                                    autodelete=True,
                                    label = T("Picture"),
                                    requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                                   error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 300x300 pixels!"))),
+                                                                   error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                    represent = lambda image: image and \
                                                         DIV(A(IMG(_src=URL(c="default", f="download",
                                                                            args=image),
@@ -617,6 +617,14 @@ class S3PersonModel(S3Model):
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Picture"),
                                                                    T("Upload an image file here.")))),
+                             Field("opt_in",
+                                   "boolean",
+                                   default=False,
+                                   label = T("Receive updates"),
+                                   comment = DIV(DIV(_class="tooltip",
+                                                     _title="%s|%s" % (T("Mailing list"),
+                                                                       T("By selecting this you agree that we may contact you.")))),
+                                   ),
                              s3.comments(),
                              *(s3.lx_fields() + s3.meta_fields()))
 
@@ -638,6 +646,14 @@ class S3PersonModel(S3Model):
             msg_record_modified = T("Person details updated"),
             msg_record_deleted = T("Person deleted"),
             msg_list_empty = T("No Persons currently registered"))
+
+        # add an opt in clause to receive emails depending on the deployment settings
+        if current.deployment_settings.get_auth_opt_in_to_email():
+            table.opt_in.readable = True
+            table.opt_in.writable = True
+        else:
+            table.opt_in.readable = False
+            table.opt_in.writable = False
 
         # Search method
         pr_person_search = S3PersonSearch(

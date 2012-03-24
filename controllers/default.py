@@ -428,6 +428,26 @@ def user():
         s3_register_validation()
     else:
         form = auth()
+        # add an opt in clause to receive emails depending on the deployment settings
+        if deployment_settings.get_auth_opt_in_to_email():
+            field_id = "%s_opt_in" % _table_user
+            comment = DIV(DIV(_class="tooltip",
+                            _title="%s|%s" % ("Mailing list",
+                                              "By selecting this you agree that we may contact you.")))
+            query = (s3db.pr_person_user.user_id == form.record.id) & \
+                    (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
+            opt_in = db(query).select(s3db.pr_person.opt_in, limitby=(0, 1)).first().opt_in
+            checked = opt_in and "selected"
+            form[0].insert(-1,
+                           TR(TD(LABEL("%s:" % "Receive updates",
+                                       _for="opt_in",
+                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                 _class="w2p_fl"),
+                                 INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
+                              TD(comment,
+                                 _class="w2p_fc"),
+                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+
 
     if request.args and request.args(0) == "profile" and \
        deployment_settings.get_auth_openid():

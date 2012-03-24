@@ -92,6 +92,10 @@ class S3Config(Storage):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
+    def get_auth_opt_in_to_email(self):
+        return self.auth.get("opt_in_to_email", False)
+    def get_auth_opt_in_default(self):
+        return self.auth.get("opt_in_default", False)
     def get_auth_registration_requests_mobile_phone(self):
         return self.auth.get("registration_requests_mobile_phone", False)
     def get_auth_registration_mobile_phone_mandatory(self):

@@ -1757,6 +1757,16 @@ class S3HRSkillModel(S3Model):
             msg_record_deleted = T("Course Certificate deleted"),
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no Course Certificates registered"))
+       # =====================================================================
+        # Mission Record
+        #
+        # These are an element of credentials:
+        # - a minimum number of hours of active duty need to be done
+        #   (e.g. every 6 months for Portuguese Bombeiros)
+        #
+        # This should be auto-populated out of Events
+        # - as well as being updateable manually for off-system Events
+        #
 
         tablename = "hrm_experience"
         table = define_table(tablename,

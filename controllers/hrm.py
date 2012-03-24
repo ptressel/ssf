@@ -514,9 +514,9 @@ def person():
                         editable = False,
                         deletable = False)
         s3mgr.configure("hrm_bio",
-                        insertable = False,
-                        editable = False,
-                        deletable = False)
+                        insertable = True,
+                        editable = True,
+                        deletable = True)
         s3mgr.configure("pr_group_membership",
                         insertable = False,
                         editable = False,

@@ -182,7 +182,7 @@ deployment_settings.L10n.religions = {
     "none":T("none"),
     "christian":T("Christian"),
     "muslim":T("Muslim"),
-    "jew":T("Jewish"),
+    "jewish":T("Jewish"),
     "buddhist":T("Buddhist"),
     "hindu":T("Hindu"),
     "bahai":T("Bahai"),

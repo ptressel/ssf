@@ -406,6 +406,18 @@ def user():
         _table_user.utc_offset.readable = True
         _table_user.utc_offset.writable = True
 
+        # If we have an opt_in and some post_vars then update the opt_in value
+        if deployment_settings.get_auth_opt_in_to_email() and request.post_vars:
+            opt_list = deployment_settings.get_auth_opt_in_team_list()
+            selected = []
+            for opt_in in opt_list:
+                if opt_in in request.post_vars:
+                    selected.append(opt_in)
+            query = (s3db.pr_person_user.user_id == request.post_vars.id) & \
+                    (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
+            id = db(query).select(s3db.pr_person.id, limitby=(0, 1)).first().id
+            db(s3db.pr_person.id == id).update(opt_in = selected)
+
     auth.settings.profile_onaccept = user_profile_onaccept
 
     login_form = register_form = None
@@ -430,23 +442,23 @@ def user():
         form = auth()
         # add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
-            field_id = "%s_opt_in" % _table_user
-            comment = DIV(DIV(_class="tooltip",
-                            _title="%s|%s" % ("Mailing list",
-                                              "By selecting this you agree that we may contact you.")))
+            opt_list = deployment_settings.get_auth_opt_in_team_list()
             query = (s3db.pr_person_user.user_id == form.record.id) & \
                     (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
-            opt_in = db(query).select(s3db.pr_person.opt_in, limitby=(0, 1)).first().opt_in
-            checked = opt_in and "selected"
-            form[0].insert(-1,
-                           TR(TD(LABEL("%s:" % "Receive updates",
-                                       _for="opt_in",
-                                       _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                                 _class="w2p_fl"),
-                                 INPUT(_name="opt_in", _id=field_id, _type="checkbox", _checked=checked),
-                              TD(comment,
-                                 _class="w2p_fc"),
-                           _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+            db_opt_in_list = db(query).select(s3db.pr_person.opt_in, limitby=(0, 1)).first().opt_in
+            for opt_in in opt_list:
+                field_id = "%s_opt_in_%s" % (_table_user, opt_list)
+                if opt_in in db_opt_in_list:
+                    checked = "selected"
+                else:
+                    checked = None
+                form[0].insert(-1,
+                               TR(TD(LABEL("Receive %s updates:" % opt_in,
+                                           _for="opt_in",
+                                           _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                     _class="w2p_fl"),
+                                     INPUT(_name=opt_in, _id=field_id, _type="checkbox", _checked=checked),
+                               _id=field_id + SQLFORM.ID_ROW_SUFFIX))
 
 
     if request.args and request.args(0) == "profile" and \

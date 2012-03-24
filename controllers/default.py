@@ -34,7 +34,7 @@ def register_validation(form):
     elif deployment_settings.get_auth_registration_mobile_phone_mandatory():
         form.errors.mobile = T("Phone number is required")
 
-    org = deployment_settings.get_auth_registration_organisation_default()
+    org = deployment_settings.get_auth_registration_organisation_id_default()
     if org:
         # Add to default organisation
         form.vars.organisation_id = org

@@ -729,7 +729,7 @@ class AuthS3(Auth):
         else:
             user.organisation_id.readable = False
             user.organisation_id.writable = False
-        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_default()
+        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
         # @ToDo: Option to request Facility during Registration
         user.site_id.readable = False
         labels, required = s3_mark_required(user)

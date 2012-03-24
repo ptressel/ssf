@@ -91,7 +91,10 @@ deployment_settings.base.migrate = True
 # 20+ Demo (Data required for a default demo)
 #     Each subsequent Demos can take any unique number >= 20
 #     The actual demo will be defined by the file demo_folders.cfg
-deployment_settings.base.prepopulate = "demo/SSF"
+deployment_settings.base.prepopulate = ["default/Default",
+                                        "default/SSF",
+                                        "demo/SSF"
+                                        ]
 
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites

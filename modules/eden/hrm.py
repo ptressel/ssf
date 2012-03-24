@@ -143,18 +143,22 @@ class S3HRModel(S3Model):
         if not settings.get_hrm_show_staff():
             title_list = T("Volunteers")
             title_search = T("Search Volunteers")
+            title_upload = T("Import Volunteers"),
         elif not settings.get_hrm_show_vols():
             title_list = T("Staff")
             title_search = T("Search Staff")
+            title_upload = T("Import Staff"),
         else:
             title_list = T("Staff & Volunteers")
             title_search = T("Search Staff & Volunteers")
+            title_upload = T("Import Staff & Volunteers"),
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Staff Member"),
             title_display = T("Staff Member Details"),
             title_list = title_list,
             title_update = T("Edit Record"),
             title_search = title_search,
+            title_upload = title_upload,
             subtitle_create = T("Add New Staff Member"),
             subtitle_list = T("Staff Members"),
             label_list_button = T("List All Records"),

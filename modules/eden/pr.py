@@ -1234,7 +1234,9 @@ class S3ContactModel(S3Model):
 class S3PersonAddressModel(S3Model):
     """ Addresses for Persons """
 
-    names = ["pr_address"]
+    names = ["pr_address",
+             "pr_address_type_opts"
+            ]
 
     def model(self):
 
@@ -1318,7 +1320,9 @@ class S3PersonAddressModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return Storage()
+        return Storage(
+                pr_address_type_opts = pr_address_type_opts
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod

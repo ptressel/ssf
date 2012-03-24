@@ -68,11 +68,6 @@ s3_menu_prep()
 def index():
     """ Dashboard """
 
-    if response.error:
-        return dict(r=None,
-                    ns=None,
-                    nv=None)
-
     mode = session.s3.hrm.mode
     if mode is not None:
         redirect(URL(f="person"))
@@ -372,6 +367,11 @@ def person():
         @ToDo: Volunteers should be redirected to vol/person?
     """
 
+    # Custom Method for Contacts
+    s3mgr.model.set_method("pr", resourcename,
+                           method="contacts",
+                           action=contacts)
+
     if deployment_settings.has_module("asset"):
         # Assets as component of people
         s3mgr.model.add_component("asset_asset",
@@ -460,8 +460,7 @@ def person():
         table.occupation.readable = False
         table.occupation.writable = False
         # Just have a Home Address
-        s3mgr.load("pr_address")
-        table = db.pr_address
+        table = s3db.pr_address
         table.type.default = 1
         table.type.readable = False
         table.type.writable = False
@@ -471,7 +470,6 @@ def person():
         s3mgr.model.add_component("pr_address",
                                   pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
                                                   multiple=False))
-        address_tab_name = T("Home Address")
         # Default type for HR
         table = s3db.hrm_human_resource
         table.type.default = 1
@@ -479,7 +477,6 @@ def person():
     else:
         s3.crud_strings[tablename].update(
             title_upload = T("Import Volunteers"))
-        address_tab_name = T("Addresses")
         # Default type for HR
         table = db.hrm_human_resource
         table.type.default = 2
@@ -520,18 +517,6 @@ def person():
                         insertable = False,
                         editable = False,
                         deletable = False)
-        tabs = [(T("Person Details"), None),
-                (address_tab_name, "address"),
-                (T("Contact Details"), "contact"),
-                (T("Trainings"), "training"),
-                (T("Certificates"), "certification"),
-                (T("Skills"), "competency"),
-                #(T("Credentials"), "credential"),
-                (T("Mission Record"), "experience"),
-                (T("Positions"), "human_resource"),
-                (T("Teams"), "group_membership")]
-        if deployment_settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
@@ -540,25 +525,10 @@ def person():
             s3.crud_strings[tablename].update(
                 title_display = T("Staff Member Details"),
                 title_update = T("Staff Member Details"))
-            hr_record = T("Staff Record")
         elif group == "volunteer":
             s3.crud_strings[tablename].update(
                 title_display = T("Volunteer Details"),
                 title_update = T("Volunteer Details"))
-            hr_record = T("Volunteer Record")
-        tabs = [(T("Person Details"), None),
-                (hr_record, "human_resource"),
-                (address_tab_name, "address"),
-                (T("Contact Data"), "contact"),
-                (T("Trainings"), "training"),
-                (T("Certificates"), "certification"),
-                (T("Skills"), "competency"),
-                (T("Credentials"), "credential"),
-                (T("Mission Record"), "experience"),
-                (T("Teams"), "group_membership")]
-
-        if deployment_settings.has_module("asset"):
-            tabs.append((T("Assets"), "asset"))
 
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -670,15 +640,165 @@ def person():
         orgname=session.s3.hrm.orgname
     else:
         orgname=None
-    rheader = lambda r, tabs=tabs: hrm_rheader(r, tabs)
 
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
-                                rheader=rheader,
+                                rheader=hrm_rheader,
                                 orgname=orgname,
                                 template="person",
                                 replace_option=T("Remove existing data before import"))
     return output
+
+# -----------------------------------------------------------------------------
+def contacts(r, **attr):
+    """
+        Custom Method to provide the details for the Person's Contacts Tab:
+        - provides a single view on:
+            Address (pr_address)
+            Contacts (pr_contact)
+            Emergency Contacts
+    """
+
+    from itertools import groupby
+
+    if r.http != "GET":
+        r.error(405, s3mgr.ERROR.BAD_METHOD)
+
+    person = r.record
+
+    # Get the contacts
+    ctable = s3db.pr_contact
+    query = (ctable.pe_id == person.pe_id)
+    contacts = db(query).select(ctable.id,
+                                ctable.value,
+                                ctable.contact_method,
+                                orderby=ctable.contact_method)
+
+    contact_groups = {}
+    for key, group in groupby(contacts, lambda c: c.contact_method):
+        contact_groups[key] = list(group)
+
+    contacts_wrapper = DIV(_class="contacts")
+
+    items = contact_groups.items()
+    opts = msg.CONTACT_OPTS
+    for contact_type, details in items:
+        contacts_wrapper.append(H3(opts[contact_type]))
+        for detail in details:
+            contacts_wrapper.append(P(
+                SPAN(detail.value),
+                A(T("Edit"), _class="editBtn"),
+                _id="contact-%s" % detail.id,
+                _class="contact",
+                ))
+
+    # Get the addresses
+    atable = s3db.pr_address
+    query = (atable.pe_id == person.pe_id)
+    addresses = db(query).select(atable.id,
+                                 atable.type,
+                                 atable.building_name,
+                                 atable.address,
+                                 atable.postcode,
+                                 orderby=atable.type)
+
+    address_groups = {}
+    for key, group in groupby(addresses, lambda a: a.type):
+        address_groups[key] = list(group)
+
+    address_wrapper = DIV(_class="addresses")
+
+    # We don't want to edit/view comments on the address here.
+    atable.comments.writable = False
+    atable.comments.readable = False
+    atable.id.readable = False
+    s3mgr.configure(atable,
+                    update_next=URL(c="hrm", f="person",
+                                    args=[person.id, "contacts"]))
+
+    items = address_groups.items()
+    opts = s3db.pr_address_type_opts
+    for address_type, details in items:
+        address_wrapper.append(H3(opts[address_type]))
+        for detail in details:
+            building_name = detail.building_name or ""
+            if building_name:
+                building_name = "%s, " % building_name
+            address = detail.address or ""
+            if address:
+                address = "%s, " % address
+            postcode = detail.postcode or ""
+            address_wrapper.append(P(
+                SPAN("%s%s%s" % (building_name,
+                                 address,
+                                 postcode)),
+                A(T("Edit"), _class="editBtn"),
+                _id="address-%s" % detail.id,
+                _class="address",
+                ))
+                #DIV(SQLFORM(atable, detail, _class="hidden"),
+                #    _class="form-container"),
+
+    # Get the Teams
+    ltable = s3db.pr_group_membership
+    query = (ltable.person_id == r.id)
+    lists = db(query).select()
+
+    lists_wrapper = DIV(_class="lists")
+    ltable.comments.writable = False
+    ltable.comments.readable = False
+    ltable.id.readable = False
+
+    if lists:
+        lists_wrapper.append(H3(T("Contact Groups")))
+        list_string = ", ".join(map(lambda l: l.group_id.name, lists))
+        lists_wrapper.append(P(list_string))
+
+    # Overall content
+    content = DIV(address_wrapper,
+                  contacts_wrapper,
+                  lists_wrapper,
+                  _class="contacts-wrapper")
+
+    # Add the javascript
+    response.s3.scripts.append(URL(c="static", f="scripts",
+                               args=["S3", "s3.contacts.js"]))
+    response.s3.js_global.append("personId = %s;" % person.id);
+
+    # Custom View
+    response.view = "hrm/contacts.html"
+
+    # RHeader for consistency
+    rheader = hrm_rheader(r)
+
+    return dict(
+            title = T("Contacts"),
+            rheader = rheader,
+            content = content,
+        )
+
+# -----------------------------------------------------------------------------
+def address():
+    """
+        RESTful controller to allow editing of address records within contacts()
+    """
+
+    person_id = request.get_vars.get("person", None)
+    if person_id:
+        s3mgr.configure("pr_address",
+                        update_next=URL(f="person",
+                                        args=[person_id, "contacts"])
+                        )
+
+    output = s3_rest_controller("pr", "address")
+    return output
+
+# -----------------------------------------------------------------------------
+def contact():
+    """ RESTful controller to allow S3JSON submission of contact records """
+
+    response.s3.prep = lambda r: r.representation == "s3json"
+    return s3_rest_controller("pr", "contact")
 
 # -----------------------------------------------------------------------------
 def hrm_rheader(r, tabs=[]):
@@ -689,7 +809,46 @@ def hrm_rheader(r, tabs=[]):
     if r.representation == "html":
 
         if r.name == "person":
-            # Tabs defined in controller
+            group = request.get_vars.get("group", "staff")
+            # Tabs
+            if session.s3.hrm.mode is not None:
+                # Configure for personal mode
+                #if group == "staff":
+                #    address_tab_name = T("Home Address")
+                #else:
+                #    address_tab_name = T("Addresses")
+                tabs = [(T("Person Details"), None),
+                        #(address_tab_name, "address"),
+                        (T("Contact Details"), "contacts"),
+                        (T("Trainings"), "training"),
+                        (T("Certificates"), "certification"),
+                        (T("Skills"), "competency"),
+                        #(T("Credentials"), "credential"),
+                        (T("Mission Record"), "experience"),
+                        (T("Positions"), "human_resource"),
+                        (T("Teams"), "group_membership"),
+                        (T("Assets"), "asset"),
+                       ]
+            else:
+                # Configure for HR manager mode
+                if group == "staff":
+                    hr_record = T("Staff Record")
+                    #address_tab_name = T("Home Address")
+                elif group == "volunteer":
+                    hr_record = T("Volunteer Record")
+                    #address_tab_name = T("Addresses")
+                tabs = [(T("Person Details"), None),
+                        (hr_record, "human_resource"),
+                        #(address_tab_name, "address"),
+                        (T("Contact Data"), "contacts"),
+                        (T("Trainings"), "training"),
+                        (T("Certificates"), "certification"),
+                        (T("Skills"), "competency"),
+                        (T("Credentials"), "credential"),
+                        (T("Mission Record"), "experience"),
+                        (T("Teams"), "group_membership"),
+                        (T("Assets"), "asset"),
+                       ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
             person = r.record
             if person:

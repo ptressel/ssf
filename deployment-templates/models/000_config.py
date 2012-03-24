@@ -109,7 +109,7 @@ deployment_settings.base.cdn = False
 # JS Debug messages are also available in the Console
 # can also load an individual page in debug mode by appending URL with
 # ?debug=1
-deployment_settings.base.debug = False
+deployment_settings.base.debug = True
 
 # Email settings
 # Outbound server

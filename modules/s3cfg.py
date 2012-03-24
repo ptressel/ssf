@@ -109,6 +109,19 @@ class S3Config(Storage):
     def get_auth_registration_organisation_default(self):
         " Default the Organisation during registration "
         return self.auth.get("registration_organisation_default", None)
+    def get_auth_registration_organisation_id_default(self):
+        " Default the Organisation during registration - will return the organisation_id"
+        name = self.auth.get("registration_organisation_default", None)
+        if name:
+            otable = current.s3db.org_organisation
+            orow = current.db(otable.name == name).select(otable.id).first()
+            if orow:
+                organisation_id = orow.id
+            else:
+                organisation_id = otable.insert(name = name)
+        else:
+            organisation_id = None
+        return organisation_id
     def get_auth_registration_requests_image(self):
         " Have the registration form request an Image "
         return self.auth.get("registration_requests_image", False)

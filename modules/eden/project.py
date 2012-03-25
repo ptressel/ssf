@@ -2130,7 +2130,7 @@ class S3ProjectTaskModel(S3Model):
     @staticmethod
     def task_onvalidation(form):
         """ Task form validation """
-
+        T = current.T
         vars = form.vars
         if str(vars.status) == "3" and not vars.pe_id:
             form.errors.pe_id = \

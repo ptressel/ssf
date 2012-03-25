@@ -2801,6 +2801,38 @@ def pr_contacts(r, **attr):
         )
 
 # =============================================================================
+def pr_profile(r, **attr):
+    """
+        Custom Method to provide the auth_user profile as a Tab of the Person
+    """
+
+    if r.http != "GET":
+        r.error(405, current.manager.ERROR.BAD_METHOD)
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    person = r.record
+
+    # Profile
+    ltable = s3db.pr_person_user
+    query = (ltable.pe_id == person.pe_id)
+    profile = db(query).select(limitby=(0, 1)).first()
+
+    # Custom View
+    response.view = "pr/profile.html"
+
+    # RHeader for consistency
+    rheader = s3db.hrm_rheader(r)
+
+    return dict(
+            title = T("Profile"),
+            rheader = rheader,
+            form = form,
+        )
+
+# =============================================================================
 def pr_rheader(r, tabs=[]):
     """
         Person Registry resource headers

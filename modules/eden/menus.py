@@ -1131,15 +1131,18 @@ class S3OptionsMenu:
 
     # -------------------------------------------------------------------------
     def deployment(self):
-	""" Deployment Module """
-	return M(c="deployment") (
-		M("Deployments", f="regs")(
-                        M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
-                        M("Import", m="import")
-                    ),	 
-		)
+        """ Deployments Registry """
+
+        return M(c="deployment") (
+            M("Deployments", f="deployment")(
+                            M("New", m="create"),
+                            M("List All"),
+                            #M("Search", m="search"),
+                            #M("Import", m="import")
+                        ),	 
+            )
+
+    # -------------------------------------------------------------------------
     def project(self):
         """ PROJECT / Project Tracking & Management """
 

@@ -411,17 +411,19 @@ def person():
                                     s3db.org_site_represent,
                                     filterby="organisation_id",
                                     filter_opts=[session.s3.hrm.org]))
-    table.type.readable = True
-    table.type.writable = True
-    if group == "staff" and hr_id:
-        table.site_id.writable = True
-        table.site_id.readable = True
-    elif group == "volunteer" and hr_id:
-        table.location_id.writable = True
+    if hr_id:
+        if group == "staff":
+            table.site_id.writable = True
+            table.site_id.readable = True
+        else:
+            # Volunteer
+            table.location_id.writable = True
+            table.location_id.readable = True
+            table.location_id.label = T("Home Address")
+    else:
         table.location_id.readable = True
-    elif not hr_id:
-        table.location_id.readable = True
         table.site_id.readable = True
+
     if session.s3.hrm.mode is not None:
         s3mgr.configure(tablename,
                         list_fields=["id",

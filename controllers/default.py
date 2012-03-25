@@ -109,17 +109,6 @@ _table_user.language.comment = DIV(_class="tooltip",
                                                      T("The language you wish the site to be displayed in.")))
 _table_user.language.represent = lambda opt: s3_languages.get(opt, UNKNOWN_OPT)
 
-# Photo widget
-if not deployment_settings.get_auth_registration_requests_image():
-    _table_user.image.readable = _table_user.image.writable = False
-else:
-    _table_user.image.comment = DIV(_class="stickytip",
-                                     _title="%s|%s" % (T("Image"),
-                                                       T("You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50.") % \
-                                                        dict(gravatar = A("Gravatar",
-                                                                          _target="top",
-                                                                          _href="http://gravatar.com"))))
-
 # Organisation widget for use in Registration Screen
 # NB User Profile is only editable by Admin - using User Management
 organisation_represent = s3db.org_organisation_represent
@@ -185,7 +174,7 @@ def index():
                         _style = "margin-right: 10px;")
         else:
             add_btn = ""
-        project_box = DIV( H3(T("Projects")),
+        project_box = DIV( H3(T("Task Lists")),
                        add_btn,
                         project_items["items"],
                         _id = "project_box",

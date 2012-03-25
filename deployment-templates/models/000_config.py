@@ -530,7 +530,7 @@ deployment_settings.modules = OrderedDict([
     #        module_type = 10,
     #    )),
     ("project", Storage(
-            name_nice = T("Projects"),
+            name_nice = T("Task Lists"),
             description = T("Tracking of Projects, Activities and Tasks"),
             restricted = True,
             module_type = 1

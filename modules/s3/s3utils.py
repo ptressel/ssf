@@ -669,26 +669,39 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
 
     if tablename == "auth_user":
         user = db(table.id == id).select(table.email,
-                                         table.image,
                                          limitby=(0, 1),
                                          cache=cache).first()
         if user:
             email = user.email.strip().lower()
-            image = user.image
+        ltable = s3db.pr_person_user
+        itable = s3db.pr_image
+        query = (ltable.user_id == id) & \
+                (ltable.pe_id == itable.pe_id) & \
+                (itable.profile == True)
+        image = db(query).select(itable.image,
+                                 limitby=(0, 1)).first()
+        if image:
+            image = image.image
     elif tablename == "pr_person":
         user = db(table.id == id).select(table.pe_id,
-                                         table.picture,
                                          limitby=(0, 1),
                                          cache=cache).first()
         if user:
-            image = user.picture
             ctable = s3db.pr_contact
-            query = (ctable.pe_id == id) & (ctable.contact_method == "EMAIL")
+            query = (ctable.pe_id == user.pe_id) & \
+                    (ctable.contact_method == "EMAIL")
             email = db(query).select(ctable.value,
                                      limitby=(0, 1),
                                      cache=cache).first()
             if email:
                 email = email.value
+            itable = s3db.pr_image
+            query = (itable.pe_id == user.pe_id) & \
+                    (itable.profile == True)
+            image = db(query).select(itable.image,
+                                     limitby=(0, 1)).first()
+            if image:
+                image = image.image
 
     if image:
         url = URL(c="default", f="download",

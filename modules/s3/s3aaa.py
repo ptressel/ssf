@@ -1295,7 +1295,8 @@ class AuthS3(Auth):
                         (ctable.contact_method == "EMAIL") & \
                         (ctable.value.lower() == email)
                 person = db(query).select(ptable.id,
-                                          ptable.pe_id).first()
+                                          ptable.pe_id,
+                                          limitby=(0, 1)).first()
 
                 if person and \
                    not db(ltable.pe_id == person.pe_id).count():
@@ -1377,7 +1378,21 @@ class AuthS3(Auth):
                                     value = mobile,
                                     **owner)
                         person_ids.append(new_id)
-
+    
+                        # Add the user to each team if they have chosen to opt-in
+                        g_table = s3db["pr_group"]
+                        gm_table = s3db["pr_group_membership"]
+                        for team in opt_in:
+                            query = (g_table.name == team)
+                            team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                            # if the team doesn't exist then add it
+                            if team_rec == None:
+                                team_id = g_table.insert(name = team)
+                            else:
+                                team_id = team_rec.id
+                            gm_table.insert(group_id = team_id,
+                                            person_id = new_id)
+    
                     # Set pe_id if this is the current user
                     if self.user and self.user.id == user.id:
                         self.user.pe_id = pe_id

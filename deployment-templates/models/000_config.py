@@ -130,15 +130,17 @@ deployment_settings.mail.approver = "useradmin@your.org"
 # Frontpage settings
 # RSS feeds
 deployment_settings.frontpage.rss = [
-    {"title": "Eden",
-     # Trac timeline
-     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+    {"title": "Sahana Software Foundation News",
+     # SSF Website News feed
+	 "url": "http://sahanafoundation.org/category/news/feed"
     },
-    {"title": "Twitter",
+	{"title": "Sahana Software Foundation Blog",
+     # SSF Website Blog feed
+	 "url": "http://sahanafoundation.org/category/blog/feed"
+    },
+	{"title": "@SahanaFOSS on Twitter",
      # @SahanaFOSS
      "url": "http://twitter.com/statuses/user_timeline/96591754.rss"
-     # Hashtag
-     #url: "http://search.twitter.com/search.atom?q=%23eqnz"
     }
 ]
 

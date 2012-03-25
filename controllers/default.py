@@ -264,7 +264,7 @@ def index():
                                 dict(login=B(T("login")))))))
 
     if deployment_settings.frontpage.rss:
-        response.s3.external_stylesheets.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css" )
+        response.s3.stylesheets.append( "S3/gfdynamicfeedcontrol.css" )
         response.s3.scripts.append( "http://www.google.com/jsapi?key=notsupplied-wizard" )
         response.s3.scripts.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js" )
         counter = 0

@@ -177,6 +177,10 @@ if len(pop_list) > 0:
                 #dict(c="gis", f="cache_feed", uacl=acl.ALL, oacl=default_oacl),
                 # Allow unauthenticated users to view feature queries
                 #dict(c="gis", f="feature_query", uacl=acl.NONE, oacl=default_oacl),
+                # Allow unauthenticated "profile" query. This is used to fetch
+                # basic user info -- name, image, bio, roles -- for display on
+                # another server (e.g. the SSF Wordpress site).
+                dict(c="pr", f="profile", uacl=acl.READ, oacl=default_oacl),
                 uid=sysroles.ANONYMOUS,
                 protected=True)
 

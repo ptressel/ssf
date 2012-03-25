@@ -667,5 +667,59 @@ def load_search():
     redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
     return
 
+# -----------------------------------------------------------------------------
+def profile():
+    """
+        Package up the fields needed to display brief person profiles.
+        This is specific to the SSF instance at the moment, and is used to
+        provide profile info for display on the Wordpress site.
+        @ToDo: Add server authentication?
+        @ToDo: Use sync instead?
+        @ToDo: Add a list of each person's roles.
+        @ToDo: Is there a virtual field for pr_person.name that provides a
+        localized representation of the name?
+    """
+
+    from gluon.dal import Rows,Row
+
+    ptable = s3db.pr_person
+    htable = s3db.hrm_bio
+    itable = s3db.pr_image
+
+    query = (itable.profile == True)
+    left = [htable.on(ptable.id==htable.person_id),
+            itable.on(ptable.pe_id==itable.pe_id)]
+    raw_rows = db(query).select(ptable.uuid,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
+                                htable.short_bio,
+                                itable.url,
+                                left = left)
+
+    rows = Rows(colnames=["name", "bio", "picture"])
+    for raw_row in raw_rows:
+        row = Row()
+
+        prow = raw_row.pr_person
+        fname = prow.first_name
+        mname = prow.middle_name
+        lname = prow.last_name
+        row.name = s3_format_fullname(fname, mname, lname, False)
+
+        try:
+            hrow = raw_row.hrm_bio
+            row.bio = hrow.short_bio
+        except:
+            row.bio = ""
+
+        try:
+            irow = raw_row.pr_image
+            row.picture = irow.url
+        except:
+            row.picture = ""
+
+    response.headers["Content-Type"] = "application/json"
+    return rows.json()
 
 # END =========================================================================

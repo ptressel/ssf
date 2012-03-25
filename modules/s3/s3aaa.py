@@ -45,6 +45,7 @@ from gluon.dal import Field, Row, Query, Set, Table, Expression
 from gluon.sqlhtml import CheckboxesWidget, StringWidget
 from gluon.tools import Auth, callback
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from gluon.contrib.login_methods.email_auth import email_auth
 
 from s3method import S3Method
 from s3validators import IS_ACL
@@ -184,7 +185,6 @@ class AuthS3(Auth):
         session = current.session
         settings = self.settings
         messages = self.messages
-        T = current.T
 
         # User table
         if not settings.table_user:
@@ -547,6 +547,13 @@ class AuthS3(Auth):
                             formname="login", dbio=False,
                             onvalidation=onvalidation):
                 accepted_form = True
+                if username == "email":
+                    gmail_domains = current.deployment_settings.get_auth_gmail_domains()
+                    if gmail_domains:
+                        domain = form.vars[username].split("@")[1]
+                        if domain in gmail_domains:
+                            self.settings.login_methods.append(
+                                email_auth("smtp.gmail.com:587", "@%s" % domain))
                 # check for username in db
                 query = (table_user[username] == form.vars[username])
                 users = db(query).select()

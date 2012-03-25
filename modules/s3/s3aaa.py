@@ -1131,12 +1131,9 @@ class AuthS3(Auth):
                                            owned_by_facility)
 
         if "image" in vars:
-            try:
+            if hasattr(vars.image, "file"):
                 source_file = vars.image.file
                 original_filename = vars.image.filename
-            except:
-                pass
-            else:
                 ptable = s3db.pr_person
                 query = (ptable.id == person_id)
                 pe_id = db(query).select(ptable.pe_id,

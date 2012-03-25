@@ -1521,19 +1521,35 @@ class S3PersonImageModel(S3Model):
             others for this person.
         """
 
+        db = current.db
+        s3db = current.s3db
+        table = s3db.pr_image
+
         vars = form.vars
+        id = vars.id
         profile = vars.profile
+        url = vars.url
+        newfilename = vars.image_newfilename
         if profile == 'False':
             profile = False
 
+        if newfilename and not url:
+            # Provide the link to the file in the URL field
+            url = URL(c="default", f="download", args=newfilename)
+            query = (table.id == id)
+            db(query).update(url = url)
+
         if profile:
-            db = current.db
-            s3db = current.s3db
-            table = s3db.pr_image
-            # Set all others for this person as not the Profile picture
-            query  = (table.pe_id == vars.pe_id) & \
-                     (table.id != vars.id)
-            db(query).update(profile = False)
+            # Find the pe_id
+            query = (table.id == id)
+            pe = db(query).select(table.pe_id,
+                                  limitby=(0, 1)).first()
+            if pe:
+                pe_id = pe.pe_id
+                # Set all others for this person as not the Profile picture
+                query  = (table.pe_id == pe_id) & \
+                         (table.id != id)
+                db(query).update(profile = False)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1544,8 +1560,10 @@ class S3PersonImageModel(S3Model):
         s3db = current.s3db
         request = current.request
 
+        vars = form.vars
         table = s3db.pr_image
-        image = form.vars.image
+        image = vars.image
+        url = vars.url
 
         if not hasattr(image, "file"):
             id = request.post_vars.id
@@ -1555,7 +1573,6 @@ class S3PersonImageModel(S3Model):
                 if record:
                     image = record.image
 
-        url = form.vars.url
         if not hasattr(image, "file") and not image and not url:
             form.errors.image = \
             form.errors.url = T("Either file upload or image URL required.")

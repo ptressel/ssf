@@ -109,7 +109,7 @@ deployment_settings.base.cdn = False
 # JS Debug messages are also available in the Console
 # can also load an individual page in debug mode by appending URL with
 # ?debug=1
-deployment_settings.base.debug = True
+deployment_settings.base.debug = False
 
 # Email settings
 # Outbound server
@@ -468,7 +468,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Organizations"),
             description = T('Lists "who is doing what & where". Allows relief agencies to coordinate their activities'),
             restricted = True,
-            module_type = 1
+            module_type = 10
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
@@ -490,73 +490,73 @@ deployment_settings.modules = OrderedDict([
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
             module_type = None,
         )),
-    ("supply", Storage(
-            name_nice = T("Supply Chain Management"),
-            description = T("Used within Inventory Management, Request Management and Asset Management"),
-            restricted = True,
-            module_type = None, # Not displayed
-        )),
-    ("inv", Storage(
-            name_nice = T("Warehouse"),
-            description = T("Receiving and Sending Items"),
-            restricted = True,
-            module_type = 4
-        )),
+    #("supply", Storage(
+    #        name_nice = T("Supply Chain Management"),
+    #        description = T("Used within Inventory Management, Request Management and Asset Management"),
+    #        restricted = True,
+    #        module_type = None, # Not displayed
+    #    )),
+    #("inv", Storage(
+    #        name_nice = T("Warehouse"),
+    #        description = T("Receiving and Sending Items"),
+    #        restricted = True,
+    #        module_type = 4
+    #    )),
     #("proc", Storage(
     #        name_nice = T("Procurement"),
     #        description = T("Ordering & Purchasing of Goods & Services"),
     #        restricted = True,
     #        module_type = 10
     #    )),
-    ("asset", Storage(
-            name_nice = T("Assets"),
-            description = T("Recording and Assigning Assets"),
-            restricted = True,
-            module_type = 5,
-        )),
+    #("asset", Storage(
+    #        name_nice = T("Assets"),
+    #        description = T("Recording and Assigning Assets"),
+    #        restricted = True,
+    #        module_type = 5,
+    #    )),
     # Vehicle depends on Assets
-    ("vehicle", Storage(
-            name_nice = T("Vehicles"),
-            description = T("Manage Vehicles"),
-            restricted = True,
-            module_type = 10,
-        )),
-    ("req", Storage(
-            name_nice = T("Requests"),
-            description = T("Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested."),
-            restricted = True,
-            module_type = 10,
-        )),
+    #("vehicle", Storage(
+    #        name_nice = T("Vehicles"),
+    #        description = T("Manage Vehicles"),
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
+    #("req", Storage(
+    #        name_nice = T("Requests"),
+    #        description = T("Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested."),
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
     ("project", Storage(
             name_nice = T("Projects"),
             description = T("Tracking of Projects, Activities and Tasks"),
             restricted = True,
-            module_type = 2
+            module_type = 1
         )),
     ("survey", Storage(
             name_nice = T("Surveys"),
             description = T("Create, enter, and manage surveys."),
             restricted = True,
-            module_type = 5,
+            module_type = 4,
         )),
-    ("cr", Storage(
-            name_nice = T("Shelters"),
-            description = T("Tracks the location, capacity and breakdown of victims in Shelters"),
-            restricted = True,
-            module_type = 10
-        )),
-    ("hms", Storage(
-            name_nice = T("Hospitals"),
-            description = T("Helps to monitor status of hospitals"),
-            restricted = True,
-            module_type = 10
-        )),
-    ("irs", Storage(
-            name_nice = T("Incidents"),
-            description = T("Incident Reporting System"),
-            restricted = False,
-            module_type = 10
-        )),
+    #("cr", Storage(
+    #        name_nice = T("Shelters"),
+    #        description = T("Tracks the location, capacity and breakdown of victims in Shelters"),
+    #        restricted = True,
+    #        module_type = 10
+    #    )),
+    #("hms", Storage(
+    #        name_nice = T("Hospitals"),
+    #        description = T("Helps to monitor status of hospitals"),
+    #        restricted = True,
+    #        module_type = 10
+    #    )),
+    #("irs", Storage(
+    #        name_nice = T("Incidents"),
+    #        description = T("Incident Reporting System"),
+    #        restricted = False,
+    #        module_type = 10
+    #    )),
     #("impact", Storage(
     #        name_nice = T("Impacts"),
     #        description = T("Used by Assess"),
@@ -571,18 +571,18 @@ deployment_settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    ("scenario", Storage(
-            name_nice = T("Scenarios"),
-            description = T("Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities)."),
-            restricted = True,
-            module_type = 10,
-        )),
-    ("event", Storage(
-            name_nice = T("Events"),
-            description = T("Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities)."),
-            restricted = True,
-            module_type = 10,
-        )),
+    #("scenario", Storage(
+    #        name_nice = T("Scenarios"),
+    #        description = T("Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities)."),
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
+    #("event", Storage(
+    #        name_nice = T("Events"),
+    #        description = T("Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities)."),
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
     # NB Budget module depends on Project Tracking Module
     # @ToDo: Rewrite in a modern style
     #("budget", Storage(
@@ -612,26 +612,26 @@ deployment_settings.modules = OrderedDict([
     #        restricted = False,
     #        module_type = 10,
     #    )),
-    ("dvi", Storage(
-           name_nice = T("Disaster Victim Identification"),
-           description = T("Disaster Victim Identification"),
-           restricted = True,
-           module_type = 10,
-           #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-           #audit_read = True,     # Can enable Audit for just an individual module here
-           #audit_write = True
-       )),
-    ("mpr", Storage(
-           name_nice = T("Missing Person Registry"),
-           description = T("Helps to report and search for missing persons"),
-           restricted = False,
-           module_type = 10,
-       )),
+    #("dvi", Storage(
+    #       name_nice = T("Disaster Victim Identification"),
+    #       description = T("Disaster Victim Identification"),
+    #       restricted = True,
+    #       module_type = 10,
+    #       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
+    #       #audit_read = True,     # Can enable Audit for just an individual module here
+    #       #audit_write = True
+    #   )),
+    #("mpr", Storage(
+    #       name_nice = T("Missing Person Registry"),
+    #       description = T("Helps to report and search for missing persons"),
+    #       restricted = False,
+    #       module_type = 10,
+    #   )),
     ("cms", Storage(
            name_nice = T("Content Management"),
            description = T("Content Management System"),
            restricted = True,
-           module_type = 10,
+           module_type = 3,
        )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),

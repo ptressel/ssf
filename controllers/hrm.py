@@ -654,9 +654,12 @@ def contacts(r, **attr):
     """
         Custom Method to provide the details for the Person's Contacts Tab:
         - provides a single view on:
-            Address (pr_address)
+            Addresses (pr_address)
             Contacts (pr_contact)
             Emergency Contacts
+
+        @ToDo: Fix Map in Address' LocationSelector
+        @ToDo: Allow Address Create's LocationSelector to work in Debug mode
     """
 
     from itertools import groupby
@@ -666,33 +669,7 @@ def contacts(r, **attr):
 
     person = r.record
 
-    # Get the contacts
-    ctable = s3db.pr_contact
-    query = (ctable.pe_id == person.pe_id)
-    contacts = db(query).select(ctable.id,
-                                ctable.value,
-                                ctable.contact_method,
-                                orderby=ctable.contact_method)
-
-    contact_groups = {}
-    for key, group in groupby(contacts, lambda c: c.contact_method):
-        contact_groups[key] = list(group)
-
-    contacts_wrapper = DIV(_class="contacts")
-
-    items = contact_groups.items()
-    opts = msg.CONTACT_OPTS
-    for contact_type, details in items:
-        contacts_wrapper.append(H3(opts[contact_type]))
-        for detail in details:
-            contacts_wrapper.append(P(
-                SPAN(detail.value),
-                A(T("Edit"), _class="editBtn"),
-                _id="contact-%s" % detail.id,
-                _class="contact",
-                ))
-
-    # Get the addresses
+    # Addresses
     atable = s3db.pr_address
     query = (atable.pe_id == person.pe_id)
     addresses = db(query).select(atable.id,
@@ -706,15 +683,9 @@ def contacts(r, **attr):
     for key, group in groupby(addresses, lambda a: a.type):
         address_groups[key] = list(group)
 
-    address_wrapper = DIV(_class="addresses")
-
-    # We don't want to edit/view comments on the address here.
-    atable.comments.writable = False
-    atable.comments.readable = False
-    atable.id.readable = False
-    s3mgr.configure(atable,
-                    update_next=URL(c="hrm", f="person",
-                                    args=[person.id, "contacts"]))
+    address_wrapper = DIV(H2(T("Addresses")),
+                          DIV(A(T("Add"), _class="addBtn", _id="address-add"),
+                              _class="margin"))
 
     items = address_groups.items()
     opts = s3db.pr_address_type_opts
@@ -732,32 +703,71 @@ def contacts(r, **attr):
                 SPAN("%s%s%s" % (building_name,
                                  address,
                                  postcode)),
-                A(T("Edit"), _class="editBtn"),
+                A(T("Edit"), _class="editBtn fright"),
                 _id="address-%s" % detail.id,
                 _class="address",
                 ))
-                #DIV(SQLFORM(atable, detail, _class="hidden"),
-                #    _class="form-container"),
 
-    # Get the Teams
-    ltable = s3db.pr_group_membership
-    query = (ltable.person_id == r.id)
-    lists = db(query).select()
+    # Contacts
+    ctable = s3db.pr_contact
+    query = (ctable.pe_id == person.pe_id)
+    contacts = db(query).select(ctable.id,
+                                ctable.value,
+                                ctable.contact_method,
+                                orderby=ctable.contact_method)
 
-    lists_wrapper = DIV(_class="lists")
-    ltable.comments.writable = False
-    ltable.comments.readable = False
-    ltable.id.readable = False
+    contact_groups = {}
+    for key, group in groupby(contacts, lambda c: c.contact_method):
+        contact_groups[key] = list(group)
 
-    if lists:
-        lists_wrapper.append(H3(T("Contact Groups")))
-        list_string = ", ".join(map(lambda l: l.group_id.name, lists))
-        lists_wrapper.append(P(list_string))
+    contacts_wrapper = DIV(H2(T("Contacts")),
+                           DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
+                               _class="margin"))
+
+
+    items = contact_groups.items()
+    opts = msg.CONTACT_OPTS
+    for contact_type, details in items:
+        contacts_wrapper.append(H3(opts[contact_type]))
+        for detail in details:
+            contacts_wrapper.append(P(
+                SPAN(detail.value),
+                A(T("Edit"), _class="editBtn fright"),
+                _id="contact-%s" % detail.id,
+                _class="contact",
+                ))
+
+    # Emergency Contacts
+    etable = s3db.pr_contact_emergency
+    query = (etable.pe_id == person.pe_id) & \
+            (etable.deleted == False)
+    emergency = db(query).select(etable.id,
+                                 etable.name,
+                                 etable.relationship,
+                                 etable.phone)
+
+    emergency_wrapper = DIV(H2(T("Emergency Contacts")),
+                            DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
+                                _class="margin"))
+
+    for contact in emergency:
+        name = contact.name or ""
+        if name:
+            name = "%s, "% name
+        relationship = contact.relationship or ""
+        if relationship:
+            relationship = "%s, "% relationship
+        emergency_wrapper.append(P(
+            SPAN("%s%s%s" % (name, relationship, contact.phone)),
+            A(T("Edit"), _class="editBtn fright"),
+            _id="emergency-%s" % contact.id,
+            _class="emergency",
+            ))
 
     # Overall content
     content = DIV(address_wrapper,
                   contacts_wrapper,
-                  lists_wrapper,
+                  emergency_wrapper,
                   _class="contacts-wrapper")
 
     # Add the javascript
@@ -780,25 +790,89 @@ def contacts(r, **attr):
 # -----------------------------------------------------------------------------
 def address():
     """
-        RESTful controller to allow editing of address records within contacts()
+        RESTful controller to allow creating/editing of address records within
+        contacts()
     """
 
-    person_id = request.get_vars.get("person", None)
-    if person_id:
-        s3mgr.configure("pr_address",
-                        update_next=URL(f="person",
-                                        args=[person_id, "contacts"])
-                        )
+    # CRUD pre-process
+    def prep(r):
+        person_id = request.get_vars.get("person", None)
+        if person_id:
+            s3mgr.configure("pr_address",
+                            create_next=URL(f="person",
+                                            args=[person_id, "contacts"]),
+                            update_next=URL(f="person",
+                                            args=[person_id, "contacts"])
+                            )
+            if r.method == "create":
+                table = s3db.pr_person
+                query = (table.id == person_id)
+                pe_id = db(query).select(table.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                s3db.pr_address.pe_id.default = pe_id
+        return True
+    response.s3.prep = prep
 
-    output = s3_rest_controller("pr", "address")
+    output = s3_rest_controller("pr", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
 def contact():
-    """ RESTful controller to allow S3JSON submission of contact records """
+    """
+        RESTful controller to allow creating/editing of contact records within
+        contacts()
+    """
 
-    response.s3.prep = lambda r: r.representation == "s3json"
-    return s3_rest_controller("pr", "contact")
+    # CRUD pre-process
+    def prep(r):
+        person_id = request.get_vars.get("person", None)
+        if person_id:
+            s3mgr.configure("pr_contact",
+                            create_next=URL(f="person",
+                                            args=[person_id, "contacts"]),
+                            update_next=URL(f="person",
+                                            args=[person_id, "contacts"])
+                            )
+            if r.method == "create":
+                table = s3db.pr_person
+                query = (table.id == person_id)
+                pe_id = db(query).select(table.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                s3db.pr_contact.pe_id.default = pe_id
+        return True
+    response.s3.prep = prep
+
+    output = s3_rest_controller("pr", resourcename)
+    return output
+
+# -----------------------------------------------------------------------------
+def contact_emergency():
+    """
+        RESTful controller to allow creating/editing of emergency contact
+        records within contacts()
+    """
+
+    # CRUD pre-process
+    def prep(r):
+        person_id = request.get_vars.get("person", None)
+        if person_id:
+            s3mgr.configure("pr_contact_emergency",
+                            create_next=URL(f="person",
+                                            args=[person_id, "contacts"]),
+                            update_next=URL(f="person",
+                                            args=[person_id, "contacts"])
+                            )
+            if r.method == "create":
+                table = s3db.pr_person
+                query = (table.id == person_id)
+                pe_id = db(query).select(table.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                s3db.pr_contact_emergency.pe_id.default = pe_id
+        return True
+    response.s3.prep = prep
+
+    output = s3_rest_controller("pr", resourcename)
+    return output
 
 # -----------------------------------------------------------------------------
 def hrm_rheader(r, tabs=[]):

@@ -1530,12 +1530,11 @@ div#last_update {
     width: 500px;
 }
 
-.contacts-wrapper .editBtn {
-    float: right;
+.contacts-wrapper p {
+   margin-bottom: 5px;
 }
-
-.contacts-wrapper input[type=submit] {
-    float: right;
+.contacts-wrapper div.margin {
+   margin-bottom: 10px;
 }
 
 .contacts-wrapper .contact.saving .editBtn,

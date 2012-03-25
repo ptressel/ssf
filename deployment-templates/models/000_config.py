@@ -541,7 +541,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Surveys"),
             description = T("Create, enter, and manage surveys."),
             restricted = True,
-            module_type = 4,
+            module_type = 5,
         )),
     #("cr", Storage(
     #        name_nice = T("Shelters"),
@@ -641,7 +641,7 @@ deployment_settings.modules = OrderedDict([
            name_nice = T("Deployments"),
            description = T("Deployment Registry"),
            restricted = True,
-           module_type = 5,
+           module_type = 4,
        )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),

@@ -719,6 +719,7 @@ class S3PersonModel(S3Model):
         add_component("hrm_competency", pr_person="person_id")
         add_component("hrm_credential", pr_person="person_id")
         add_component("hrm_experience", pr_person="person_id")
+        add_component("hrm_bio", pr_person = dict(joinby ="person_id", multiple = False))
         # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
 

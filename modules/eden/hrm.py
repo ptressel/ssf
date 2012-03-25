@@ -805,6 +805,7 @@ class S3HRSkillModel(S3Model):
              "hrm_experience",
              "hrm_skill_id",
              "hrm_multi_skill_id",
+             "hrm_bio",
             ]
 
     def model(self):
@@ -1757,8 +1758,7 @@ class S3HRSkillModel(S3Model):
             msg_record_deleted = T("Course Certificate deleted"),
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no Course Certificates registered"))
-
-        # =====================================================================
+       # =====================================================================
         # Mission Record
         #
         # These are an element of credentials:
@@ -1807,6 +1807,46 @@ class S3HRSkillModel(S3Model):
             msg_record_deleted = T("Mission deleted"),
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no Missions registered"))
+        
+        
+        # =====================================================================
+        # Personal Bio
+        #
+        # These are an element of credentials:
+        # - a minimum number of hours of active duty need to be done
+        #   (e.g. every 6 months for Portuguese Bombeiros)
+        #
+        # This should be auto-populated out of Events
+        # - as well as being updateable manually for off-system Events
+        #
+
+        tablename = "hrm_bio"
+        table = define_table(tablename,
+                             person_id(),
+                             Field("short_bio", "text",
+                                   label=T("Short Bio"),
+                                   ),
+                             Field("long_bio", "text",
+                                   label=T("Long Bio"),
+                                   ),
+                             *meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Bio"),
+            title_display = T("Bio Details"),
+            title_list = T("Biography"),
+            title_update = T("Edit Bio"),
+            title_search = T("Search Bio"),
+            subtitle_create = T("Add Bio"),
+            subtitle_list = T("Bio"),
+            label_list_button = T("List MBio"),
+            label_create_button = T("Add New Bio"),
+            label_delete_button = T("Delete Bio"),
+            msg_record_created = T("Bio added"),
+            msg_record_modified = T("Bio updated"),
+            msg_record_deleted = T("Biodeleted"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no bios registered"))
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -2464,7 +2504,8 @@ def hrm_rheader(r, tabs=[]):
                 #    address_tab_name = T("Addresses")
                 tabs = [(T("Person Details"), None),
                         #(address_tab_name, "address"),
-                        (T("Contact Details"), "contacts"),
+                        (T("Contacts"), "contacts"),
+                        (T("Bio"), "bio"),
                         (T("Trainings"), "training"),
                         (T("Certificates"), "certification"),
                         (T("Skills"), "competency"),
@@ -2485,7 +2526,8 @@ def hrm_rheader(r, tabs=[]):
                 tabs = [(T("Person Details"), None),
                         (hr_record, "human_resource"),
                         #(address_tab_name, "address"),
-                        (T("Contact Data"), "contacts"),
+                        (T("Contacts"), "contacts"),
+                        (T("Bio"), "bio"),
                         (T("Trainings"), "training"),
                         (T("Certificates"), "certification"),
                         (T("Skills"), "competency"),

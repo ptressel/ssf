@@ -42,6 +42,7 @@ __all__ = ["S3PersonEntity",
            "pr_pentity_represent",
            "pr_person_represent",
            "pr_person_comment",
+           "pr_contacts",
            "pr_rheader",
            "pr_update_affiliations",
            "pr_add_affiliation",
@@ -718,6 +719,7 @@ class S3PersonModel(S3Model):
         add_component("hrm_competency", pr_person="person_id")
         add_component("hrm_credential", pr_person="person_id")
         add_component("hrm_experience", pr_person="person_id")
+        add_component("hrm_bio", pr_person = dict(joinby ="person_id", multiple = False))
         # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
 
@@ -2585,6 +2587,150 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
                             tooltip="%s|%s" % (title, comment))
 
 # =============================================================================
+def pr_contacts(r, **attr):
+    """
+        Custom Method to provide the details for the Person's Contacts Tab:
+        - provides a single view on:
+            Addresses (pr_address)
+            Contacts (pr_contact)
+            Emergency Contacts
+
+        @ToDo: Fix Map in Address' LocationSelector
+        @ToDo: Allow Address Create's LocationSelector to work in Debug mode
+    """
+
+    from itertools import groupby
+
+    if r.http != "GET":
+        r.error(405, current.manager.ERROR.BAD_METHOD)
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    person = r.record
+
+    # Addresses
+    atable = s3db.pr_address
+    query = (atable.pe_id == person.pe_id)
+    addresses = db(query).select(atable.id,
+                                 atable.type,
+                                 atable.building_name,
+                                 atable.address,
+                                 atable.postcode,
+                                 orderby=atable.type)
+
+    address_groups = {}
+    for key, group in groupby(addresses, lambda a: a.type):
+        address_groups[key] = list(group)
+
+    address_wrapper = DIV(H2(T("Addresses")),
+                          DIV(A(T("Add"), _class="addBtn", _id="address-add"),
+                              _class="margin"))
+
+    items = address_groups.items()
+    opts = s3db.pr_address_type_opts
+    for address_type, details in items:
+        address_wrapper.append(H3(opts[address_type]))
+        for detail in details:
+            building_name = detail.building_name or ""
+            if building_name:
+                building_name = "%s, " % building_name
+            address = detail.address or ""
+            if address:
+                address = "%s, " % address
+            postcode = detail.postcode or ""
+            address_wrapper.append(P(
+                SPAN("%s%s%s" % (building_name,
+                                 address,
+                                 postcode)),
+                A(T("Edit"), _class="editBtn fright"),
+                _id="address-%s" % detail.id,
+                _class="address",
+                ))
+
+    # Contacts
+    ctable = s3db.pr_contact
+    query = (ctable.pe_id == person.pe_id)
+    contacts = db(query).select(ctable.id,
+                                ctable.value,
+                                ctable.contact_method,
+                                orderby=ctable.contact_method)
+
+    contact_groups = {}
+    for key, group in groupby(contacts, lambda c: c.contact_method):
+        contact_groups[key] = list(group)
+
+    contacts_wrapper = DIV(H2(T("Contacts")),
+                           DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
+                               _class="margin"))
+
+
+    items = contact_groups.items()
+    opts = current.msg.CONTACT_OPTS
+    for contact_type, details in items:
+        contacts_wrapper.append(H3(opts[contact_type]))
+        for detail in details:
+            contacts_wrapper.append(P(
+                SPAN(detail.value),
+                A(T("Edit"), _class="editBtn fright"),
+                _id="contact-%s" % detail.id,
+                _class="contact",
+                ))
+
+    # Emergency Contacts
+    etable = s3db.pr_contact_emergency
+    query = (etable.pe_id == person.pe_id) & \
+            (etable.deleted == False)
+    emergency = db(query).select(etable.id,
+                                 etable.name,
+                                 etable.relationship,
+                                 etable.phone)
+
+    emergency_wrapper = DIV(H2(T("Emergency Contacts")),
+                            DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
+                                _class="margin"))
+
+    for contact in emergency:
+        name = contact.name or ""
+        if name:
+            name = "%s, "% name
+        relationship = contact.relationship or ""
+        if relationship:
+            relationship = "%s, "% relationship
+        emergency_wrapper.append(P(
+            SPAN("%s%s%s" % (name, relationship, contact.phone)),
+            A(T("Edit"), _class="editBtn fright"),
+            _id="emergency-%s" % contact.id,
+            _class="emergency",
+            ))
+
+    # Overall content
+    content = DIV(address_wrapper,
+                  contacts_wrapper,
+                  emergency_wrapper,
+                  _class="contacts-wrapper")
+
+    # Add the javascript
+    response = current.response
+    s3 = response.s3
+    s3.scripts.append(URL(c="static", f="scripts",
+                          args=["S3", "s3.contacts.js"]))
+    s3.js_global.append("personId = %s;" % person.id);
+
+    # Custom View
+    response.view = "pr/contacts.html"
+
+    # RHeader for consistency
+    rheader = s3db.hrm_rheader(r)
+
+    return dict(
+            title = T("Contacts"),
+            rheader = rheader,
+            content = content,
+        )
+
+# =============================================================================
 def pr_rheader(r, tabs=[]):
     """
         Person Registry resource headers
@@ -2659,8 +2805,8 @@ def pr_rheader(r, tabs=[]):
     return None
 
 # =============================================================================
-# =============================================================================
 # Affiliation Callbacks
+# =============================================================================
 #
 def pr_update_affiliations(table, record):
     """ Update all affiliations related to this record """
@@ -3007,8 +3153,8 @@ def pr_human_resource_update_affiliations(person_id):
     return
 
 # =============================================================================
-# =============================================================================
 # Affiliation Helpers
+# =============================================================================
 #
 def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
     """
@@ -3086,8 +3232,8 @@ def pr_remove_affiliation(master, affiliate, role=None):
     return
 
 # =============================================================================
-# =============================================================================
 # PE Helpers
+# =============================================================================
 #
 def pr_get_pe_id(entity, record_id=None):
     """
@@ -3145,8 +3291,8 @@ def pr_get_pe_id(entity, record_id=None):
     return None
 
 # =============================================================================
-# =============================================================================
 # Back-end Role tools
+# =============================================================================
 #
 def pr_define_role(pe_id,
                    role=None,
@@ -3267,8 +3413,8 @@ def pr_remove_from_role(role_id, pe_id):
     return
 
 # =============================================================================
-# =============================================================================
 # Back-end Path Tools
+# =============================================================================
 #
 def pr_get_role_paths(pe_id, roles=None, role_types=None):
     """
@@ -3430,8 +3576,8 @@ def pr_get_descendants(pe_ids, skip=[]):
     return result
 
 # =============================================================================
-# =============================================================================
 # Internal Path Tools
+# =============================================================================
 #
 def pr_rebuild_path(pe_id, clear=False):
     """

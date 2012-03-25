@@ -3,7 +3,7 @@ $('#address-add').click(function () {
     // Remove any existing form
     $('#popup').remove()
     // Download the form
-    var url = S3.Ap.concat('/hrm/address/create.iframe')
+    var url = S3.Ap.concat('/pr/address/create.iframe')
     $.get(url, function(data) {
         // Hide the Add button
         button.hide();
@@ -12,7 +12,7 @@ $('#address-add').click(function () {
         // Load the Form into the iframe
         button.next().html(data);
         // Modify the submission URL
-        var url2 = S3.Ap.concat('/hrm/address/create?person=' + personId);
+        var url2 = S3.Ap.concat('/pr/address/create?person=' + personId);
         $('#popup').find('form').attr('action', url2);
     });
 });
@@ -22,7 +22,7 @@ $('.address').each(function () {
     var id = address.attr('id').match(/\d+/);
     address.find('a.editBtn').click(function () {
         // Download the form
-        var url = S3.Ap.concat('/hrm/address/' + id + '.iframe/update')
+        var url = S3.Ap.concat('/pr/address/' + id + '.iframe/update')
         $.get(url, function(data) {
             // Remove any existing form
             $('#popup').remove()
@@ -33,7 +33,7 @@ $('.address').each(function () {
             // Load the Form into the iframe
             address.next().html(data);
             // Modify the submission URL
-            var url2 = S3.Ap.concat('/hrm/address/' + id + '/update?person=' + personId);
+            var url2 = S3.Ap.concat('/pr/address/' + id + '/update?person=' + personId);
             $('#popup').find('form').attr('action', url2);
         });
     });
@@ -44,7 +44,7 @@ $('#contact-add').click(function () {
     // Remove any existing form
     $('#popup').remove()
     // Download the form
-    var url = S3.Ap.concat('/hrm/contact/create.iframe')
+    var url = S3.Ap.concat('/pr/contact/create.iframe')
     $.get(url, function(data) {
         // Hide the Add button
         button.hide();
@@ -53,7 +53,7 @@ $('#contact-add').click(function () {
         // Load the Form into the iframe
         button.next().html(data);
         // Modify the submission URL
-        var url2 = S3.Ap.concat('/hrm/contact/create?person=' + personId);
+        var url2 = S3.Ap.concat('/pr/contact/create?person=' + personId);
         $('#popup').find('form').attr('action', url2);
     });
 });
@@ -86,7 +86,7 @@ $('.contact').each(function () {
             contact.removeClass('edit').addClass('saving');
             form.append($('<img src="' + S3.Ap.concat('/static/img/jquery-ui/ui-anim_basic_16x16.gif') + '">').addClass('fright'));
             form.find('input[type=submit]').addClass('hidden');
-            $.post(S3.Ap.concat('/hrm/contact/' + id[0] + '.s3json'),
+            $.post(S3.Ap.concat('/pr/contact/' + id[0] + '.s3json'),
                    '{"$_pr_contact":' + JSON.stringify({'value': input.val()}) + '}',
                    function () {
                       contact.removeClass('saving');
@@ -103,7 +103,7 @@ $('#emergency-add').click(function () {
     // Remove any existing form
     $('#popup').remove()
     // Download the form
-    var url = S3.Ap.concat('/hrm/contact_emergency/create.iframe')
+    var url = S3.Ap.concat('/pr/contact_emergency/create.iframe')
     $.get(url, function(data) {
         // Hide the Add button
         button.hide();
@@ -112,7 +112,7 @@ $('#emergency-add').click(function () {
         // Load the Form into the iframe
         button.next().html(data);
         // Modify the submission URL
-        var url2 = S3.Ap.concat('/hrm/contact_emergency/create?person=' + personId);
+        var url2 = S3.Ap.concat('/pr/contact_emergency/create?person=' + personId);
         $('#popup').find('form').attr('action', url2);
     });
 });
@@ -122,7 +122,7 @@ $('.emergency').each(function () {
     var id = emergency.attr('id').match(/\d+/);
     emergency.find('a.editBtn').click(function () {
         // Download the form
-        var url = S3.Ap.concat('/hrm/contact_emergency/' + id + '.iframe/update')
+        var url = S3.Ap.concat('/pr/contact_emergency/' + id + '.iframe/update')
         $.get(url, function(data) {
             // Remove any existing form
             $('#popup').remove()
@@ -133,7 +133,7 @@ $('.emergency').each(function () {
             // Load the Form into the iframe
             emergency.next().html(data);
             // Modify the submission URL
-            var url2 = S3.Ap.concat('/hrm/contact_emergency/' + id + '/update?person=' + personId);
+            var url2 = S3.Ap.concat('/pr/contact_emergency/' + id + '/update?person=' + personId);
             $('#popup').find('form').attr('action', url2);
         });
     });

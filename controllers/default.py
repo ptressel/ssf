@@ -409,14 +409,44 @@ def user():
         # If we have an opt_in and some post_vars then update the opt_in value
         if deployment_settings.get_auth_opt_in_to_email() and request.post_vars:
             opt_list = deployment_settings.get_auth_opt_in_team_list()
+            removed = []
             selected = []
             for opt_in in opt_list:
                 if opt_in in request.post_vars:
                     selected.append(opt_in)
+                else:
+                    removed.append(opt_in)
             query = (s3db.pr_person_user.user_id == request.post_vars.id) & \
                     (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
-            id = db(query).select(s3db.pr_person.id, limitby=(0, 1)).first().id
-            db(s3db.pr_person.id == id).update(opt_in = selected)
+            person_id = db(query).select(s3db.pr_person.id, limitby=(0, 1)).first().id
+            db(s3db.pr_person.id == person_id).update(opt_in = selected)
+
+            g_table = s3db["pr_group"]
+            gm_table = s3db["pr_group_membership"]
+            # Remove them from any team they are a member of in the removed list
+            for team in removed:
+                query = (g_table.name == team) & \
+                        (gm_table.group_id == g_table.id) & \
+                        (gm_table.person_id == person_id)
+                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                if gm_rec:
+                    db(gm_table.id == gm_rec.id).delete()
+            # Add them to the team (if they are not already a team member)
+            for team in selected:
+                query = (g_table.name == team) & \
+                        (gm_table.group_id == g_table.id) & \
+                        (gm_table.person_id == person_id)
+                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                if not gm_rec:
+                    query = (g_table.name == team)
+                    team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                    # if the team doesn't exist then add it
+                    if team_rec == None:
+                        team_id = g_table.insert(name = team)
+                    else:
+                        team_id = team_rec.id
+                    gm_table.insert(group_id = team_id,
+                                    person_id = person_id)
 
     auth.settings.profile_onaccept = user_profile_onaccept
 

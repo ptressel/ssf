@@ -1666,7 +1666,7 @@ class S3SavedSearch(S3Model):
                                   *s3_timestamp())
 
         # Field configuration
-        table.search_vars.represent = lambda id : self.get_criteria(id=id)
+        table.search_vars.represent = lambda search_vars : self.get_criteria(search_vars)
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -1699,43 +1699,44 @@ class S3SavedSearch(S3Model):
         return Storage()
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_criteria(id):
+    def get_criteria(search_vars):
+        """
+        @ToDo: Modify this function so that it displays a Human Readable representation of the criteria
+               Move this function to modules/s3/s3search
+               Use this function in controllers/msg instead of re-defining it there
+        """
         import cPickle
+        import re
 
-        s = ""
-        try:
-            id = id.replace("&apos;", "'")
-            search_vars = cPickle.loads(id)
-            s = "<p>"
-            pat = '_'
-            for var in search_vars.iterkeys():
-                if var == "criteria" :
-                    c_dict = search_vars[var]
-                    #s = s + crud_string("pr_save_search", "Search Criteria")
-                    for j in c_dict.iterkeys():
-                        if not re.match(pat,j):
-                            st = str(j)
-                            st = st.replace("_search_", " ")
-                            st = st.replace("_advanced", "")
-                            st = st.replace("_simple", "")
-                            st = st.replace("text", "text matching")
-                            """st = st.replace(search_vars["function"], "")
-                            st = st.replace(search_vars["prefix"], "")"""
-                            st = st.replace("_", " ")
-                            s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
-                elif var == "simple" or var == "advanced":
-                    continue
-                else:
-                    if var == "function":
-                        v1 = "Resource Name"
-                    elif var == "prefix":
-                        v1 = "Module"
-                    s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
-            s = s + "</p>"
-            return XML(s)
-        except:
-            return XML(s)
+        search_vars = search_vars.replace("&apos;", "'")
+        search_vars = cPickle.loads(str(search_vars))
+        s = "<p>"
+        pat = '_'
+        for var in search_vars.iterkeys():
+            if var == "criteria" :
+                c_dict = search_vars[var]
+                #s = s + crud_string("pr_save_search", "Search Criteria")
+                for j in c_dict.iterkeys():
+                    if not re.match(pat,j):
+                        st = str(j)
+                        st = st.replace("_search_", " ")
+                        st = st.replace("_advanced", "")
+                        st = st.replace("_simple", "")
+                        st = st.replace("text", "text matching")
+                        """st = st.replace(search_vars["function"], "")
+                        st = st.replace(search_vars["prefix"], "")"""
+                        st = st.replace("_", " ")
+                        s = "%s <b> %s </b>: %s <br />" %(s, st.capitalize(), str(c_dict[j]))
+            elif var == "simple" or var == "advanced":
+                continue
+            else:
+                if var == "function":
+                    v1 = "Resource Name"
+                elif var == "prefix":
+                    v1 = "Module"
+                s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
+        s = s + "</p>"
+        return XML(s)
 
 # =============================================================================
 class S3PersonPresence(S3Model):

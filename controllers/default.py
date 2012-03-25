@@ -457,14 +457,18 @@ def user():
         register_form = form
         # Add client-side validation
         s3_register_validation()
+    elif request.args and request.args(0) == "change_password":
+        form = auth()
     else:
         form = auth()
         # add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
             opt_list = deployment_settings.get_auth_opt_in_team_list()
-            query = (s3db.pr_person_user.user_id == form.record.id) & \
-                    (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
-            db_opt_in_list = db(query).select(s3db.pr_person.opt_in, limitby=(0, 1)).first().opt_in
+            query = (ltable.user_id == form.record.id) & \
+                    (ltable.pe_id == ptable.pe_id)
+            db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
             for opt_in in opt_list:
                 field_id = "%s_opt_in_%s" % (_table_user, opt_list)
                 if opt_in in db_opt_in_list:

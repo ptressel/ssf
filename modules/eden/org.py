@@ -1445,6 +1445,7 @@ def org_rheader(r, tabs=[]):
                     (T("Projects"), "project"),
                     #(T("Tasks"), "task"),
                    ]
+        tabs.append((T("Mailing List"), "mailing_list/"))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 

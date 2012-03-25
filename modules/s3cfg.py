@@ -93,7 +93,7 @@ class S3Config(Storage):
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
     def get_auth_opt_in_team_list(self):
-        return self.auth.get("opt_in_team_list", False)
+        return self.auth.get("opt_in_team_list", [])
     def get_auth_opt_in_to_email(self):
         return self.get_auth_opt_in_team_list() != []
     def get_auth_opt_in_default(self):

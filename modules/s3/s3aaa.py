@@ -1387,7 +1387,7 @@ class AuthS3(Auth):
                             team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
                             # if the team doesn't exist then add it
                             if team_rec == None:
-                                team_id = g_table.insert(name = team)
+                                team_id = g_table.insert(name = team, group_type = 5)
                             else:
                                 team_id = team_rec.id
                             gm_table.insert(group_id = team_id,

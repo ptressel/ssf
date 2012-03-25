@@ -18,7 +18,7 @@ if len(pop_list) > 0:
     if deployment_settings.get_auth_opt_in_to_email():
         table = db["pr_group"]
         for team in deployment_settings.get_auth_opt_in_team_list():
-            table.insert(name = team)
+            table.insert(name = team, group_type = 5)
     # Scheduled Tasks
     if deployment_settings.has_module("msg"):
         # Send Messages from Outbox

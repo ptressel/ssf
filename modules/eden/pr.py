@@ -867,7 +867,8 @@ class S3GroupModel(S3Model):
             1:T("Family"),
             2:T("Tourist Group"),
             3:T("Relief Team"),
-            4:T("other")
+            4:T("other"),
+            5:T("Mailing Lists"),
         }
 
         tablename = "pr_group"
@@ -914,6 +915,25 @@ class S3GroupModel(S3Model):
             msg_record_modified = T("Group updated"),
             msg_record_deleted = T("Group deleted"),
             msg_list_empty = T("No Groups currently registered"))
+
+        # CRUD Strings
+        ADD_GROUP = T("Add Mailing List")
+        LIST_GROUPS = T("Mailing List")
+        mailing_list_crud_strings = Storage(
+            title_create = ADD_GROUP,
+            title_display = T("Mailing List Details"),
+            title_list = LIST_GROUPS,
+            title_update = T("Edit Mailing List"),
+            title_search = T("Search Mailing Lists"),
+            subtitle_create = T("Add New Mailing List"),
+            subtitle_list = T("Mailing Lists"),
+            label_list_button = LIST_GROUPS,
+            label_create_button = ADD_GROUP,
+            label_delete_button = T("Delete Mailing List"),
+            msg_record_created = T("Mailing list added"),
+            msg_record_modified = T("Mailing list updated"),
+            msg_record_deleted = T("Mailing list deleted"),
+            msg_list_empty = T("No Mailing List currently established"))
 
         # Resource configuration
         configure(tablename,
@@ -1020,7 +1040,8 @@ class S3GroupModel(S3Model):
         #
         return Storage(
             pr_group_id = group_id,
-            pr_group_represent = group_represent
+            pr_group_represent = group_represent,
+            pr_mailing_list_crud_strings = mailing_list_crud_strings
         )
 
     # -------------------------------------------------------------------------
@@ -2747,12 +2768,7 @@ def pr_rheader(r, tabs=[]):
     gis = current.gis
     s3 = current.response.s3
 
-    if "viewing" in r.vars:
-        tablename, record_id = r.vars.viewing.rsplit(".", 1)
-        record = db[tablename][record_id]
-    else:
-        tablename = r.tablename
-        record = r.record
+    tablename, record = s3_rheader_resource(r)
 
     if r.representation == "html":
         rheader_tabs = s3_rheader_tabs(r, tabs)

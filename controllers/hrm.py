@@ -370,7 +370,7 @@ def person():
     # Custom Method for Contacts
     s3mgr.model.set_method("pr", resourcename,
                            method="contacts",
-                           action=contacts)
+                           action=s3db.pr_contacts)
 
     if deployment_settings.has_module("asset"):
         # Assets as component of people
@@ -643,354 +643,11 @@ def person():
 
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
-                                rheader=hrm_rheader,
+                                rheader=s3db.hrm_rheader,
                                 orgname=orgname,
                                 template="person",
                                 replace_option=T("Remove existing data before import"))
     return output
-
-# -----------------------------------------------------------------------------
-def contacts(r, **attr):
-    """
-        Custom Method to provide the details for the Person's Contacts Tab:
-        - provides a single view on:
-            Addresses (pr_address)
-            Contacts (pr_contact)
-            Emergency Contacts
-
-        @ToDo: Fix Map in Address' LocationSelector
-        @ToDo: Allow Address Create's LocationSelector to work in Debug mode
-    """
-
-    from itertools import groupby
-
-    if r.http != "GET":
-        r.error(405, s3mgr.ERROR.BAD_METHOD)
-
-    person = r.record
-
-    # Addresses
-    atable = s3db.pr_address
-    query = (atable.pe_id == person.pe_id)
-    addresses = db(query).select(atable.id,
-                                 atable.type,
-                                 atable.building_name,
-                                 atable.address,
-                                 atable.postcode,
-                                 orderby=atable.type)
-
-    address_groups = {}
-    for key, group in groupby(addresses, lambda a: a.type):
-        address_groups[key] = list(group)
-
-    address_wrapper = DIV(H2(T("Addresses")),
-                          DIV(A(T("Add"), _class="addBtn", _id="address-add"),
-                              _class="margin"))
-
-    items = address_groups.items()
-    opts = s3db.pr_address_type_opts
-    for address_type, details in items:
-        address_wrapper.append(H3(opts[address_type]))
-        for detail in details:
-            building_name = detail.building_name or ""
-            if building_name:
-                building_name = "%s, " % building_name
-            address = detail.address or ""
-            if address:
-                address = "%s, " % address
-            postcode = detail.postcode or ""
-            address_wrapper.append(P(
-                SPAN("%s%s%s" % (building_name,
-                                 address,
-                                 postcode)),
-                A(T("Edit"), _class="editBtn fright"),
-                _id="address-%s" % detail.id,
-                _class="address",
-                ))
-
-    # Contacts
-    ctable = s3db.pr_contact
-    query = (ctable.pe_id == person.pe_id)
-    contacts = db(query).select(ctable.id,
-                                ctable.value,
-                                ctable.contact_method,
-                                orderby=ctable.contact_method)
-
-    contact_groups = {}
-    for key, group in groupby(contacts, lambda c: c.contact_method):
-        contact_groups[key] = list(group)
-
-    contacts_wrapper = DIV(H2(T("Contacts")),
-                           DIV(A(T("Add"), _class="addBtn", _id="contact-add"),
-                               _class="margin"))
-
-
-    items = contact_groups.items()
-    opts = msg.CONTACT_OPTS
-    for contact_type, details in items:
-        contacts_wrapper.append(H3(opts[contact_type]))
-        for detail in details:
-            contacts_wrapper.append(P(
-                SPAN(detail.value),
-                A(T("Edit"), _class="editBtn fright"),
-                _id="contact-%s" % detail.id,
-                _class="contact",
-                ))
-
-    # Emergency Contacts
-    etable = s3db.pr_contact_emergency
-    query = (etable.pe_id == person.pe_id) & \
-            (etable.deleted == False)
-    emergency = db(query).select(etable.id,
-                                 etable.name,
-                                 etable.relationship,
-                                 etable.phone)
-
-    emergency_wrapper = DIV(H2(T("Emergency Contacts")),
-                            DIV(A(T("Add"), _class="addBtn", _id="emergency-add"),
-                                _class="margin"))
-
-    for contact in emergency:
-        name = contact.name or ""
-        if name:
-            name = "%s, "% name
-        relationship = contact.relationship or ""
-        if relationship:
-            relationship = "%s, "% relationship
-        emergency_wrapper.append(P(
-            SPAN("%s%s%s" % (name, relationship, contact.phone)),
-            A(T("Edit"), _class="editBtn fright"),
-            _id="emergency-%s" % contact.id,
-            _class="emergency",
-            ))
-
-    # Overall content
-    content = DIV(address_wrapper,
-                  contacts_wrapper,
-                  emergency_wrapper,
-                  _class="contacts-wrapper")
-
-    # Add the javascript
-    response.s3.scripts.append(URL(c="static", f="scripts",
-                               args=["S3", "s3.contacts.js"]))
-    response.s3.js_global.append("personId = %s;" % person.id);
-
-    # Custom View
-    response.view = "hrm/contacts.html"
-
-    # RHeader for consistency
-    rheader = hrm_rheader(r)
-
-    return dict(
-            title = T("Contacts"),
-            rheader = rheader,
-            content = content,
-        )
-
-# -----------------------------------------------------------------------------
-def address():
-    """
-        RESTful controller to allow creating/editing of address records within
-        contacts()
-    """
-
-    # CRUD pre-process
-    def prep(r):
-        person_id = request.get_vars.get("person", None)
-        if person_id:
-            s3mgr.configure("pr_address",
-                            create_next=URL(f="person",
-                                            args=[person_id, "contacts"]),
-                            update_next=URL(f="person",
-                                            args=[person_id, "contacts"])
-                            )
-            if r.method == "create":
-                table = s3db.pr_person
-                query = (table.id == person_id)
-                pe_id = db(query).select(table.pe_id,
-                                         limitby=(0, 1)).first().pe_id
-                s3db.pr_address.pe_id.default = pe_id
-        return True
-    response.s3.prep = prep
-
-    output = s3_rest_controller("pr", resourcename)
-    return output
-
-# -----------------------------------------------------------------------------
-def contact():
-    """
-        RESTful controller to allow creating/editing of contact records within
-        contacts()
-    """
-
-    # CRUD pre-process
-    def prep(r):
-        person_id = request.get_vars.get("person", None)
-        if person_id:
-            s3mgr.configure("pr_contact",
-                            create_next=URL(f="person",
-                                            args=[person_id, "contacts"]),
-                            update_next=URL(f="person",
-                                            args=[person_id, "contacts"])
-                            )
-            if r.method == "create":
-                table = s3db.pr_person
-                query = (table.id == person_id)
-                pe_id = db(query).select(table.pe_id,
-                                         limitby=(0, 1)).first().pe_id
-                s3db.pr_contact.pe_id.default = pe_id
-        return True
-    response.s3.prep = prep
-
-    output = s3_rest_controller("pr", resourcename)
-    return output
-
-# -----------------------------------------------------------------------------
-def contact_emergency():
-    """
-        RESTful controller to allow creating/editing of emergency contact
-        records within contacts()
-    """
-
-    # CRUD pre-process
-    def prep(r):
-        person_id = request.get_vars.get("person", None)
-        if person_id:
-            s3mgr.configure("pr_contact_emergency",
-                            create_next=URL(f="person",
-                                            args=[person_id, "contacts"]),
-                            update_next=URL(f="person",
-                                            args=[person_id, "contacts"])
-                            )
-            if r.method == "create":
-                table = s3db.pr_person
-                query = (table.id == person_id)
-                pe_id = db(query).select(table.pe_id,
-                                         limitby=(0, 1)).first().pe_id
-                s3db.pr_contact_emergency.pe_id.default = pe_id
-        return True
-    response.s3.prep = prep
-
-    output = s3_rest_controller("pr", resourcename)
-    return output
-
-# -----------------------------------------------------------------------------
-def hrm_rheader(r, tabs=[]):
-    """ Resource headers for component views """
-
-    rheader = None
-
-    if r.representation == "html":
-
-        if r.name == "person":
-            group = request.get_vars.get("group", "staff")
-            # Tabs
-            if session.s3.hrm.mode is not None:
-                # Configure for personal mode
-                #if group == "staff":
-                #    address_tab_name = T("Home Address")
-                #else:
-                #    address_tab_name = T("Addresses")
-                tabs = [(T("Person Details"), None),
-                        #(address_tab_name, "address"),
-                        (T("Contact Details"), "contacts"),
-                        (T("Trainings"), "training"),
-                        (T("Certificates"), "certification"),
-                        (T("Skills"), "competency"),
-                        #(T("Credentials"), "credential"),
-                        (T("Mission Record"), "experience"),
-                        (T("Positions"), "human_resource"),
-                        (T("Teams"), "group_membership"),
-                        (T("Assets"), "asset"),
-                       ]
-            else:
-                # Configure for HR manager mode
-                if group == "staff":
-                    hr_record = T("Staff Record")
-                    #address_tab_name = T("Home Address")
-                elif group == "volunteer":
-                    hr_record = T("Volunteer Record")
-                    #address_tab_name = T("Addresses")
-                tabs = [(T("Person Details"), None),
-                        (hr_record, "human_resource"),
-                        #(address_tab_name, "address"),
-                        (T("Contact Data"), "contacts"),
-                        (T("Trainings"), "training"),
-                        (T("Certificates"), "certification"),
-                        (T("Skills"), "competency"),
-                        (T("Credentials"), "credential"),
-                        (T("Mission Record"), "experience"),
-                        (T("Teams"), "group_membership"),
-                        (T("Assets"), "asset"),
-                       ]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            person = r.record
-            if person:
-                rheader = DIV(DIV(s3_avatar_represent(person.id,
-                                                      "pr_person",
-                                                      _class="fleft"),
-                                  _style="padding-bottom:10px;"),
-                              TABLE(
-                    TR(TH(s3_fullname(person))),
-                    ), rheader_tabs)
-
-        elif r.name == "training_event":
-            # Tabs
-            tabs = [(T("Training Event Details"), None),
-                    (T("Participants"), "participant")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            event = r.record
-            if event:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.course_id.label),
-                                       table.course_id.represent(event.course_id)),
-                                    TR(TH("%s: " % table.site_id.label),
-                                       table.site_id.represent(event.site_id)),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "certificate":
-            # Tabs
-            tabs = [(T("Certificate Details"), None),
-                    (T("Skill Equivalence"), "certificate_skill")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            certificate = r.record
-            if certificate:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.name.label),
-                                       certificate.name),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "course":
-            # Tabs
-            tabs = [(T("Course Details"), None),
-                    (T("Course Certificates"), "course_certificate")]
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-            table = r.table
-            course = r.record
-            if course:
-                rheader = DIV(TABLE(
-                                    TR(TH("%s: " % table.name.label),
-                                       course.name),
-                                    ),
-                              rheader_tabs)
-
-        elif r.name == "human_resource":
-            hr = r.record
-            if hr:
-                pass
-
-        elif r.name == "organisation":
-            org = r.record
-            if org:
-                pass
-
-    return rheader
 
 # =============================================================================
 # Teams
@@ -1193,7 +850,7 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1219,7 +876,7 @@ def certificate():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1289,7 +946,7 @@ def training_event():
         return True
     response.s3.prep = prep
 
-    output = s3_rest_controller(rheader=hrm_rheader)
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
 
 # =============================================================================

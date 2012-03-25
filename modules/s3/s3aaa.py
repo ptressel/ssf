@@ -1143,15 +1143,18 @@ class AuthS3(Auth):
                                          limitby=(0, 1)).first()
                 if pe_id:
                     pe_id = pe_id.pe_id
-                    field = s3db.pr_image.image
+                    itable = s3db.pr_image 
+                    field = itable.image
                     newfilename = field.store(source_file, original_filename, field.uploadfolder)
+                    url = URL(c="default", f="download", args=newfilename)
                     fields = dict(pe_id=pe_id,
                                   profile=True,
                                   image=newfilename,
+                                  url = url,
                                   title=current.T("Profile Picture"))
                     if isinstance(field.uploadfield, str):
                         fields[field.uploadfield] = source_file.read()
-                    s3db.pr_image.insert(**fields)
+                    itable.insert(**fields)
 
         htable = s3db.table("hrm_human_resource")
         if htable and organisation_id:

@@ -34,7 +34,7 @@ deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
 
 # The name of the teams that users are added to when they opt-in to receive alerts
-deployment_settings.auth.opt_in_team_list = ["Updates"]
+#deployment_settings.auth.opt_in_team_list = ["Updates"]
 # Uncomment this to set the opt in default to True
 deployment_settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers

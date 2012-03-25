@@ -215,6 +215,7 @@ def person():
     # Basic tabs
     tabs = [(T("Basic Details"), None),
             #(T("Address"), "address"),
+            (T("Bio"), "bio"),
             (T("Contact Details"), "contacts"),
             (T("Identity"), "identity"),
             (T("Groups"), "group_membership"),
@@ -226,8 +227,7 @@ def person():
         
     # Configuration tabs
     if deployment_settings.get_save_search_widget():
-        tabs = tabs + [#(T("Subscriptions"), "pe_subscription"),
-                       (T("Saved Searches"), "save_search"),
+        tabs = tabs + [(T("Saved Searches"), "save_search"),
                        (T("Subscription Details"), "subscription")]
     tabs.append((T("Map Settings"), "config"))
 

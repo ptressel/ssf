@@ -102,6 +102,9 @@ class S3HRModel(S3Model):
                                                              zero=None),
                                         default = 1,
                                         label = T("Type"),
+                                        # Always set via the Controller we create from
+                                        readable=False,
+                                        writable=False,
                                         represent = lambda opt: \
                                             hrm_type_opts.get(opt,
                                                               UNKNOWN_OPT)),

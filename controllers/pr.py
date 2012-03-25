@@ -214,12 +214,13 @@ def person():
 
     # Basic tabs
     tabs = [(T("Basic Details"), None),
-            #(T("Address"), "address"),
             (T("Bio"), "bio"),
+            #(T("Address"), "address"),
+            #(T("Contacts"), "contact"),
             (T("Contact Details"), "contacts"),
+            (T("Images"), "image"),
             (T("Identity"), "identity"),
             (T("Groups"), "group_membership"),
-            (T("Images"), "pimage"),
             (T("Journal"), "note"),
             (T("Skills"), "competency"),
             (T("Training"), "training"),
@@ -366,7 +367,7 @@ def group():
     return output
 
 # -----------------------------------------------------------------------------
-def pimage():
+def image():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()

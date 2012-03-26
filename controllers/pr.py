@@ -680,46 +680,40 @@ def profile():
         localized representation of the name?
     """
 
-    from gluon.dal import Rows,Row
+    import gluon.contrib.simplejson as json
 
-    ptable = s3db.pr_person
-    htable = s3db.hrm_bio
-    itable = s3db.pr_image
+    # A caution when using executesql on joined tables:
+    # Even with as_dict = True, Web2py does not prefix field names with their
+    # table names nor nest fields for each table in their own dict.
+    # So make sure all selected field names are unique -- use "as" if needed.
+    raw_rows = db.executesql("""
+        select 
+            pr_person.first_name, pr_person.middle_name, pr_person.last_name,
+            hrm_bio.short_bio, pr_image.url
+        from
+            pr_person
+            left join hrm_bio on (pr_person.id = hrm_bio.person_id)
+            left join pr_image on (pr_person.pe_id = pr_image.pe_id and pr_image.profile = 'T');
+        """,
+        as_dict = True)
 
-    query = (itable.profile == True)
-    left = [htable.on(ptable.id==htable.person_id),
-            itable.on(ptable.pe_id==itable.pe_id)]
-    raw_rows = db(query).select(ptable.uuid,
-                                ptable.first_name,
-                                ptable.middle_name,
-                                ptable.last_name,
-                                htable.short_bio,
-                                itable.url,
-                                left = left)
-
-    rows = Rows(colnames=["name", "bio", "picture"])
+    rows = []
     for raw_row in raw_rows:
-        row = Row()
+        row = {}
 
-        prow = raw_row.pr_person
-        fname = prow.first_name
-        mname = prow.middle_name
-        lname = prow.last_name
-        row.name = s3_format_fullname(fname, mname, lname, False)
+        fname = raw_row.get("first_name", "")
+        mname = raw_row.get("middle_name", "")
+        lname = raw_row.get("last_name", "")
+        row["name"] = s3_format_fullname(fname, mname, lname, False)
 
-        try:
-            hrow = raw_row.hrm_bio
-            row.bio = hrow.short_bio
-        except:
-            row.bio = ""
+        row["bio"] = raw_row.get("short_bio", "")
 
-        try:
-            irow = raw_row.pr_image
-            row.picture = irow.url
-        except:
-            row.picture = ""
+        row["picture"] = raw_row.get("url", "")
+        
+        rows.append(row)
 
     response.headers["Content-Type"] = "application/json"
-    return rows.json()
+    rows_json = json.dumps(rows)
+    return rows_json
 
 # END =========================================================================

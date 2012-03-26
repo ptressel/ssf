@@ -667,5 +667,53 @@ def load_search():
     redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
     return
 
+# -----------------------------------------------------------------------------
+def profile():
+    """
+        Package up the fields needed to display brief person profiles.
+        This is specific to the SSF instance at the moment, and is used to
+        provide profile info for display on the Wordpress site.
+        @ToDo: Add server authentication?
+        @ToDo: Use sync instead?
+        @ToDo: Add a list of each person's roles.
+        @ToDo: Is there a virtual field for pr_person.name that provides a
+        localized representation of the name?
+    """
+
+    import gluon.contrib.simplejson as json
+
+    # A caution when using executesql on joined tables:
+    # Even with as_dict = True, Web2py does not prefix field names with their
+    # table names nor nest fields for each table in their own dict.
+    # So make sure all selected field names are unique -- use "as" if needed.
+    raw_rows = db.executesql("""
+        select 
+            pr_person.first_name, pr_person.middle_name, pr_person.last_name,
+            hrm_bio.short_bio, pr_image.url
+        from
+            pr_person
+            left join hrm_bio on (pr_person.id = hrm_bio.person_id)
+            left join pr_image on (pr_person.pe_id = pr_image.pe_id and pr_image.profile = 'T');
+        """,
+        as_dict = True)
+
+    rows = []
+    for raw_row in raw_rows:
+        row = {}
+
+        fname = raw_row.get("first_name", "")
+        mname = raw_row.get("middle_name", "")
+        lname = raw_row.get("last_name", "")
+        row["name"] = s3_format_fullname(fname, mname, lname, False)
+
+        row["bio"] = raw_row.get("short_bio", "")
+
+        row["picture"] = raw_row.get("url", "")
+        
+        rows.append(row)
+
+    response.headers["Content-Type"] = "application/json"
+    rows_json = json.dumps(rows)
+    return rows_json
 
 # END =========================================================================

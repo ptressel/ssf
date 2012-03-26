@@ -1766,6 +1766,8 @@ class AuthS3(Auth):
             @param roles: list of role IDs or UIDs (or mixed)
         """
 
+        db = current.db
+
         if not isinstance(roles, (list, tuple)):
             roles = [roles]
 

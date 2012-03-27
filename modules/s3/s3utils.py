@@ -454,7 +454,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
         @param truncate: truncate the name to max 24 characters
     """
 
-    DEFAULT = ""
+    name = ""
 
     db = current.db
     ptable = db.pr_person
@@ -511,9 +511,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
             if truncate:
                 name = s3_truncate(name, 24, nice = False)
 
-        return name
-    else:
-        return DEFAULT
+    return name
 
 # =============================================================================
 def s3_represent_facilities(db, site_ids, link=True):

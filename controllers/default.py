@@ -109,17 +109,6 @@ _table_user.language.comment = DIV(_class="tooltip",
                                                      T("The language you wish the site to be displayed in.")))
 _table_user.language.represent = lambda opt: s3_languages.get(opt, UNKNOWN_OPT)
 
-# Photo widget
-if not deployment_settings.get_auth_registration_requests_image():
-    _table_user.image.readable = _table_user.image.writable = False
-else:
-    _table_user.image.comment = DIV(_class="stickytip",
-                                     _title="%s|%s" % (T("Image"),
-                                                       T("You can either use %(gravatar)s or else upload a picture here. The picture will be resized to 50x50.") % \
-                                                        dict(gravatar = A("Gravatar",
-                                                                          _target="top",
-                                                                          _href="http://gravatar.com"))))
-
 # Organisation widget for use in Registration Screen
 # NB User Profile is only editable by Admin - using User Management
 organisation_represent = s3db.org_organisation_represent
@@ -185,7 +174,7 @@ def index():
                         _style = "margin-right: 10px;")
         else:
             add_btn = ""
-        project_box = DIV( H3(T("Projects")),
+        project_box = DIV( H3(T("Task Lists")),
                        add_btn,
                         project_items["items"],
                         _id = "project_box",
@@ -264,7 +253,7 @@ def index():
                                 dict(login=B(T("login")))))))
 
     if deployment_settings.frontpage.rss:
-        response.s3.external_stylesheets.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css" )
+        response.s3.stylesheets.append( "S3/gfdynamicfeedcontrol.css" )
         response.s3.scripts.append( "http://www.google.com/jsapi?key=notsupplied-wizard" )
         response.s3.scripts.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js" )
         counter = 0
@@ -409,14 +398,44 @@ def user():
         # If we have an opt_in and some post_vars then update the opt_in value
         if deployment_settings.get_auth_opt_in_to_email() and request.post_vars:
             opt_list = deployment_settings.get_auth_opt_in_team_list()
+            removed = []
             selected = []
             for opt_in in opt_list:
                 if opt_in in request.post_vars:
                     selected.append(opt_in)
+                else:
+                    removed.append(opt_in)
             query = (s3db.pr_person_user.user_id == request.post_vars.id) & \
                     (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
-            id = db(query).select(s3db.pr_person.id, limitby=(0, 1)).first().id
-            db(s3db.pr_person.id == id).update(opt_in = selected)
+            person_id = db(query).select(s3db.pr_person.id, limitby=(0, 1)).first().id
+            db(s3db.pr_person.id == person_id).update(opt_in = selected)
+
+            g_table = s3db["pr_group"]
+            gm_table = s3db["pr_group_membership"]
+            # Remove them from any team they are a member of in the removed list
+            for team in removed:
+                query = (g_table.name == team) & \
+                        (gm_table.group_id == g_table.id) & \
+                        (gm_table.person_id == person_id)
+                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                if gm_rec:
+                    db(gm_table.id == gm_rec.id).delete()
+            # Add them to the team (if they are not already a team member)
+            for team in selected:
+                query = (g_table.name == team) & \
+                        (gm_table.group_id == g_table.id) & \
+                        (gm_table.person_id == person_id)
+                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                if not gm_rec:
+                    query = (g_table.name == team)
+                    team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                    # if the team doesn't exist then add it
+                    if team_rec == None:
+                        team_id = g_table.insert(name = team, group_type = 5)
+                    else:
+                        team_id = team_rec.id
+                    gm_table.insert(group_id = team_id,
+                                    person_id = person_id)
 
     auth.settings.profile_onaccept = user_profile_onaccept
 
@@ -438,14 +457,18 @@ def user():
         register_form = form
         # Add client-side validation
         s3_register_validation()
+    elif request.args and request.args(0) == "change_password":
+        form = auth()
     else:
         form = auth()
         # add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
             opt_list = deployment_settings.get_auth_opt_in_team_list()
-            query = (s3db.pr_person_user.user_id == form.record.id) & \
-                    (s3db.pr_person_user.pe_id == s3db.pr_person.pe_id)
-            db_opt_in_list = db(query).select(s3db.pr_person.opt_in, limitby=(0, 1)).first().opt_in
+            query = (ltable.user_id == form.record.id) & \
+                    (ltable.pe_id == ptable.pe_id)
+            db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
             for opt_in in opt_list:
                 field_id = "%s_opt_in_%s" % (_table_user, opt_list)
                 if opt_in in db_opt_in_list:

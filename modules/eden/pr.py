@@ -140,7 +140,7 @@ class S3PersonEntity(S3Model):
         pe_id = super_key(table)
         add_component("pr_contact_emergency", pr_pentity=pe_id)
         add_component("pr_address", pr_pentity=pe_id)
-        add_component("pr_pimage", pr_pentity=pe_id)
+        add_component("pr_image", pr_pentity=pe_id)
         add_component("pr_contact", pr_pentity=pe_id)
         add_component("pr_note", pr_pentity=pe_id)
         add_component("pr_physical_description",
@@ -602,22 +602,22 @@ class S3PersonModel(S3Model):
                              Field("occupation",
                                    label = T("Profession"),
                                    length=128), # Mayon Compatibility
-                             Field("picture", "upload",
-                                   autodelete=True,
-                                   label = T("Picture"),
-                                   requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
-                                                                   error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
-                                   represent = lambda image: image and \
-                                                        DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                           args=image),
-                                                                  _height=60,
-                                                                  _alt=T("View Picture")),
-                                                                  _href=URL(c="default", f="download",
-                                                                            args=image))) or
-                                                            T("No Picture"),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Picture"),
-                                                                   T("Upload an image file here.")))),
+                             # Field("picture", "upload",
+                                   # autodelete=True,
+                                   # label = T("Picture"),
+                                   # requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
+                                                                   # error_message=T("Upload an image file (bmp, gif, jpeg or png), max. 800x800 pixels!"))),
+                                   # represent = lambda image: image and \
+                                                        # DIV(A(IMG(_src=URL(c="default", f="download",
+                                                                           # args=image),
+                                                                  # _height=60,
+                                                                  # _alt=T("View Picture")),
+                                                                  # _href=URL(c="default", f="download",
+                                                                            # args=image))) or
+                                                            # T("No Picture"),
+                                   # comment = DIV(_class="tooltip",
+                                                 # _title="%s|%s" % (T("Picture"),
+                                                                   # T("Upload an image file here.")))),
                              Field("opt_in",
                                    "string", # list of mailing lists which link to teams
                                    default=False,
@@ -676,7 +676,7 @@ class S3PersonModel(S3Model):
                                       "first_name",
                                       "middle_name",
                                       "last_name",
-                                      "picture",
+                                      #"picture",
                                       "gender",
                                       "age_group",
                                       (T("Organization"), "hrm_human_resource:organisation_id$name")
@@ -867,7 +867,8 @@ class S3GroupModel(S3Model):
             1:T("Family"),
             2:T("Tourist Group"),
             3:T("Relief Team"),
-            4:T("other")
+            4:T("other"),
+            5:T("Mailing Lists"),
         }
 
         tablename = "pr_group"
@@ -914,6 +915,25 @@ class S3GroupModel(S3Model):
             msg_record_modified = T("Group updated"),
             msg_record_deleted = T("Group deleted"),
             msg_list_empty = T("No Groups currently registered"))
+
+        # CRUD Strings
+        ADD_GROUP = T("Add Mailing List")
+        LIST_GROUPS = T("Mailing List")
+        mailing_list_crud_strings = Storage(
+            title_create = ADD_GROUP,
+            title_display = T("Mailing List Details"),
+            title_list = LIST_GROUPS,
+            title_update = T("Edit Mailing List"),
+            title_search = T("Search Mailing Lists"),
+            subtitle_create = T("Add New Mailing List"),
+            subtitle_list = T("Mailing Lists"),
+            label_list_button = LIST_GROUPS,
+            label_create_button = ADD_GROUP,
+            label_delete_button = T("Delete Mailing List"),
+            msg_record_created = T("Mailing list added"),
+            msg_record_modified = T("Mailing list updated"),
+            msg_record_deleted = T("Mailing list deleted"),
+            msg_list_empty = T("No Mailing List currently established"))
 
         # Resource configuration
         configure(tablename,
@@ -1020,7 +1040,8 @@ class S3GroupModel(S3Model):
         #
         return Storage(
             pr_group_id = group_id,
-            pr_group_represent = group_represent
+            pr_group_represent = group_represent,
+            pr_mailing_list_crud_strings = mailing_list_crud_strings
         )
 
     # -------------------------------------------------------------------------
@@ -1410,7 +1431,7 @@ class S3PersonAddressModel(S3Model):
 class S3PersonImageModel(S3Model):
     """ Images for Persons """
 
-    names = ["pr_pimage"]
+    names = ["pr_image"]
 
     def model(self):
 
@@ -1424,7 +1445,7 @@ class S3PersonImageModel(S3Model):
         # ---------------------------------------------------------------------
         # Image
         #
-        pr_pimage_type_opts = {
+        pr_image_type_opts = {
             1:T("Photograph"),
             2:T("Sketch"),
             3:T("Fingerprint"),
@@ -1433,15 +1454,19 @@ class S3PersonImageModel(S3Model):
             9:T("other")
         }
 
-        tablename = "pr_pimage"
+        tablename = "pr_image"
         table = self.define_table(tablename,
                                   self.super_link("pe_id", "pr_pentity"),
+                                  Field("profile", "boolean",
+                                        default = False,
+                                        label = T("Profile Picture?")
+                                        ),
                                   Field("type", "integer",
-                                        requires = IS_IN_SET(pr_pimage_type_opts, zero=None),
+                                        requires = IS_IN_SET(pr_image_type_opts, zero=None),
                                         default = 1,
                                         label = T("Image Type"),
-                                        represent = lambda opt: pr_pimage_type_opts.get(opt,
-                                                                                        UNKNOWN_OPT)),
+                                        represent = lambda opt: pr_image_type_opts.get(opt,
+                                                                                       UNKNOWN_OPT)),
                                   Field("title", label=T("Title"),
                                         requires = IS_NOT_EMPTY(),
                                         comment = DIV(_class="tooltip",
@@ -1492,10 +1517,12 @@ class S3PersonImageModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       onvalidation = self.pr_pimage_onvalidation,
+                       onaccept = self.pr_image_onaccept,
+                       onvalidation = self.pr_image_onvalidation,
                        mark_required = ["url", "image"],
                        list_fields=["id",
                                     "title",
+                                    "profile",
                                     "type",
                                     "image",
                                     "url",
@@ -1509,15 +1536,55 @@ class S3PersonImageModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def pr_pimage_onvalidation(form):
+    def pr_image_onaccept(form):
+        """
+            If this is the profile image then remove this flag from all
+            others for this person.
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.pr_image
+
+        vars = form.vars
+        id = vars.id
+        profile = vars.profile
+        url = vars.url
+        newfilename = vars.image_newfilename
+        if profile == 'False':
+            profile = False
+
+        if newfilename and not url:
+            # Provide the link to the file in the URL field
+            url = URL(c="default", f="download", args=newfilename)
+            query = (table.id == id)
+            db(query).update(url = url)
+
+        if profile:
+            # Find the pe_id
+            query = (table.id == id)
+            pe = db(query).select(table.pe_id,
+                                  limitby=(0, 1)).first()
+            if pe:
+                pe_id = pe.pe_id
+                # Set all others for this person as not the Profile picture
+                query  = (table.pe_id == pe_id) & \
+                         (table.id != id)
+                db(query).update(profile = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_image_onvalidation(form):
         """ Image form validation """
 
         db = current.db
         s3db = current.s3db
         request = current.request
 
-        table = s3db.pr_pimage
-        image = form.vars.image
+        vars = form.vars
+        table = s3db.pr_image
+        image = vars.image
+        url = vars.url
 
         if not hasattr(image, "file"):
             id = request.post_vars.id
@@ -1527,7 +1594,6 @@ class S3PersonImageModel(S3Model):
                 if record:
                     image = record.image
 
-        url = form.vars.url
         if not hasattr(image, "file") and not image and not url:
             form.errors.image = \
             form.errors.url = T("Either file upload or image URL required.")
@@ -1656,18 +1722,17 @@ class S3SavedSearch(S3Model):
                                         readable = False,
                                         writable = False,
                                         default = auth.user_id),
-                                  Field("search_vars","string",
-                                        label = T("Search Criteria")),
+                                  Field("search_vars","text",
+                                        label = T("Search Criteria"),
+                                        represent=lambda id:self.search_vars_represent(id)),
                                   Field("subscribed","boolean",
                                         default=False),
                                   person_id(label = T("Person"),
                                             ondelete="CASCADE",
                                             default = auth.s3_logged_in_person()),
-                                  *s3_timestamp())
+                                  *s3.meta_fields())
 
-        # Field configuration
-        table.search_vars.represent = lambda search_vars : self.get_criteria(search_vars)
-
+        
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
             title_create = T("Save Search"),
@@ -1699,17 +1764,24 @@ class S3SavedSearch(S3Model):
         return Storage()
 
     # -------------------------------------------------------------------------
-    def get_criteria(search_vars):
+    @staticmethod
+    
+    def search_vars_represent(search_vars):
         """
+        Represent the search criteria
+        @param search_vars: the pr_save_search record ID
         @ToDo: Modify this function so that it displays a Human Readable representation of the criteria
                Move this function to modules/s3/s3search
                Use this function in controllers/msg instead of re-defining it there
         """
         import cPickle
         import re
-
+        s = ""
         search_vars = search_vars.replace("&apos;", "'")
-        search_vars = cPickle.loads(str(search_vars))
+        try:    
+            search_vars = cPickle.loads(str(search_vars))
+        except:
+            raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
         s = "<p>"
         pat = '_'
         for var in search_vars.iterkeys():
@@ -1737,7 +1809,6 @@ class S3SavedSearch(S3Model):
                 s = "%s<b>%s</b>: %s<br />" %(s, v1, str(search_vars[var]))
         s = s + "</p>"
         return XML(s)
-
 # =============================================================================
 class S3PersonPresence(S3Model):
     """
@@ -2732,6 +2803,38 @@ def pr_contacts(r, **attr):
         )
 
 # =============================================================================
+def pr_profile(r, **attr):
+    """
+        Custom Method to provide the auth_user profile as a Tab of the Person
+    """
+
+    if r.http != "GET":
+        r.error(405, current.manager.ERROR.BAD_METHOD)
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    person = r.record
+
+    # Profile
+    ltable = s3db.pr_person_user
+    query = (ltable.pe_id == person.pe_id)
+    profile = db(query).select(limitby=(0, 1)).first()
+
+    # Custom View
+    response.view = "pr/profile.html"
+
+    # RHeader for consistency
+    rheader = s3db.hrm_rheader(r)
+
+    return dict(
+            title = T("Profile"),
+            rheader = rheader,
+            form = form,
+        )
+
+# =============================================================================
 def pr_rheader(r, tabs=[]):
     """
         Person Registry resource headers
@@ -2744,12 +2847,7 @@ def pr_rheader(r, tabs=[]):
     gis = current.gis
     s3 = current.response.s3
 
-    if "viewing" in r.vars:
-        tablename, record_id = r.vars.viewing.rsplit(".", 1)
-        record = db[tablename][record_id]
-    else:
-        tablename = r.tablename
-        record = r.record
+    tablename, record = s3_rheader_resource(r)
 
     if r.representation == "html":
         rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -2759,13 +2857,22 @@ def pr_rheader(r, tabs=[]):
             if person:
                 s3 = current.response.s3
                 ptable = r.table
+                itable = s3db.pr_image
+                query = (itable.pe_id == record.pe_id) & \
+                        (itable.profile == True)
+                image = db(query).select(itable.image,
+                                         limitby=(0, 1)).first()
+                if image:
+                    image = TD(itable.image.represent(image.image),
+                               _rowspan=3)
+                else:
+                    image = ""
                 rheader = DIV(TABLE(
                     TR(TH("%s: " % T("Name")),
                        s3_fullname(person),
                        TH("%s: " % T("ID Tag Number")),
                        "%(pe_label)s" % person,
-                       TD(ptable.picture.represent(person.picture),
-                          _rowspan=3)),
+                       image),
                     TR(TH("%s: " % T("Date of Birth")),
                        "%s" % (person.date_of_birth or T("unknown")),
                        TH("%s: " % T("Gender")),

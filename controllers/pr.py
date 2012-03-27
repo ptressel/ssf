@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    VITA Person Registry, Controllers
-
-    @author: nursix
-    @author: Pratyush Nigam <pratyush.nigam@gmail.com>
-    @see: U{http://eden.sahanafoundation.org/wiki/BluePrintVITA}
-"""
+""" Person Registry, Controllers """
 
 module = request.controller      # @ToDo: unify prefix and module across all controllers in some cleanup sprints
 prefix = request.controller
@@ -214,20 +208,21 @@ def person():
 
     # Basic tabs
     tabs = [(T("Basic Details"), None),
+            (T("Bio"), "bio"),
             #(T("Address"), "address"),
+            #(T("Contacts"), "contact"),
             (T("Contact Details"), "contacts"),
+            (T("Images"), "image"),
             (T("Identity"), "identity"),
             (T("Groups"), "group_membership"),
-            (T("Images"), "pimage"),
             (T("Journal"), "note"),
             (T("Skills"), "competency"),
             (T("Training"), "training"),
         ]
-        
+
     # Configuration tabs
     if deployment_settings.get_save_search_widget():
-        tabs = tabs + [#(T("Subscriptions"), "pe_subscription"),
-                       (T("Saved Searches"), "save_search"),
+        tabs = tabs + [(T("Saved Searches"), "save_search"),
                        (T("Subscription Details"), "subscription")]
     tabs.append((T("Map Settings"), "config"))
 
@@ -366,7 +361,7 @@ def group():
     return output
 
 # -----------------------------------------------------------------------------
-def pimage():
+def image():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
@@ -666,5 +661,48 @@ def load_search():
     redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
     return
 
+# -----------------------------------------------------------------------------
+def profile():
+    """
+        Package up the fields needed to display brief person profiles.
+        This is specific to the SSF instance at the moment, and is used to
+        provide profile info for display on the Wordpress site.
+        @ToDo: Add server authentication?
+        @ToDo: Use sync instead?
+        @ToDo: Add a list of each person's roles.
+        @ToDo: Is there a virtual field for pr_person.name that provides a
+        localized representation of the name?
+    """
+
+    import gluon.contrib.simplejson as json
+
+    ptable = s3db.pr_person
+    htable = s3db.hrm_bio
+    itable = s3db.pr_image
+
+    left = [
+            htable.on(ptable.id == htable.person_id),
+            itable.on((ptable.pe_id == itable.pe_id) & \
+                      (itable.profile == True))
+           ]
+
+    rows = db(ptable.deleted != True).select(ptable.first_name,
+                                             ptable.middle_name,
+                                             ptable.last_name,
+                                             htable.short_bio,
+                                             itable.url,
+                                             left=left)
+
+    ptn = ptable._tablename
+    htn = htable._tablename
+    itn = itable._tablename
+    results = [{
+                "name": s3_fullname(row[ptn]),
+                "bio": row[htn]["short_bio"],
+                "picture": row[itn]["url"]
+               } for row in rows]
+
+    response.headers["Content-Type"] = "application/json"
+    return json.dumps(results)
 
 # END =========================================================================

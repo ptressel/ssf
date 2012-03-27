@@ -34,7 +34,7 @@ deployment_settings.auth.registration_requires_verification = False
 deployment_settings.auth.registration_requires_approval = False
 
 # The name of the teams that users are added to when they opt-in to receive alerts
-#deployment_settings.auth.opt_in_team_list = ["Updates"]
+deployment_settings.auth.opt_in_team_list = ["Updates"]
 # Uncomment this to set the opt in default to True
 deployment_settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers
@@ -58,7 +58,9 @@ deployment_settings.auth.registration_requests_image = True
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #deployment_settings.auth.registration_volunteer = True
 # Uncomment this to allow users to Login using OpenID
-deployment_settings.auth.openid = False
+#deployment_settings.auth.openid = True
+# Uncomment this to allow users to Login using Gmail's SMTP
+#deployment_settings.auth.gmail_domains = ["gmail.com"]
 
 # Always notify the approver of a new (verified) user, even if the user is automatically approved
 deployment_settings.auth.always_notify_approver = True
@@ -530,7 +532,7 @@ deployment_settings.modules = OrderedDict([
     #        module_type = 10,
     #    )),
     ("project", Storage(
-            name_nice = T("Projects"),
+            name_nice = T("Task Lists"),
             description = T("Tracking of Projects, Activities and Tasks"),
             restricted = True,
             module_type = 1
@@ -539,7 +541,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Surveys"),
             description = T("Create, enter, and manage surveys."),
             restricted = True,
-            module_type = 4,
+            module_type = 5,
         )),
     #("cr", Storage(
     #        name_nice = T("Shelters"),
@@ -634,6 +636,12 @@ deployment_settings.modules = OrderedDict([
            description = T("Content Management System"),
            restricted = True,
            module_type = 3,
+       )),
+    ("deployment", Storage(
+           name_nice = T("Deployments"),
+           description = T("Deployment Registry"),
+           restricted = True,
+           module_type = 4,
        )),
     #("fire", Storage(
     #       name_nice = T("Fire Stations"),

@@ -1130,6 +1130,19 @@ class S3OptionsMenu:
                 )
 
     # -------------------------------------------------------------------------
+    def deployment(self):
+        """ Deployments Registry """
+
+        return M(c="deployment") (
+            M("Deployments", f="deployment")(
+                            M("New", m="create"),
+                            M("List All"),
+                            #M("Search", m="search"),
+                            #M("Import", m="import")
+                        ),	 
+            )
+
+    # -------------------------------------------------------------------------
     def project(self):
         """ PROJECT / Project Tracking & Management """
 
@@ -1212,8 +1225,8 @@ class S3OptionsMenu:
                     ),
                     M("Tasks", f="task")(
                         M("Add New Task", m="create"),
-                        M("List All Tasks"),
-                        M("Search", m="search"),
+                        #M("List All Tasks"),
+                        M("Search All Tasks", m="search"),
                     ),
                     M("Daily Work", f="time")(
                         M("My Logged Hours", vars={"mine":1}),

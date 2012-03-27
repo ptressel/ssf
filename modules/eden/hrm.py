@@ -1842,14 +1842,14 @@ class S3HRSkillModel(S3Model):
             title_search = T("Search Bio"),
             subtitle_create = T("Add Bio"),
             subtitle_list = T("Bio"),
-            label_list_button = T("List MBio"),
+            label_list_button = T("List Bio"),
             label_create_button = T("Add New Bio"),
             label_delete_button = T("Delete Bio"),
             msg_record_created = T("Bio added"),
             msg_record_modified = T("Bio updated"),
-            msg_record_deleted = T("Biodeleted"),
+            msg_record_deleted = T("Bio deleted"),
             msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no bios registered"))
+            msg_list_empty = T("Currently no Bios registered"))
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3

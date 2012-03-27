@@ -682,34 +682,43 @@ def profile():
 
     import gluon.contrib.simplejson as json
 
-    # A caution when using executesql on joined tables:
-    # Even with as_dict = True, Web2py does not prefix field names with their
-    # table names nor nest fields for each table in their own dict.
-    # So make sure all selected field names are unique -- use "as" if needed.
-    raw_rows = db.executesql("""
-        select 
-            pr_person.first_name, pr_person.middle_name, pr_person.last_name,
-            hrm_bio.short_bio, pr_image.url
-        from
-            pr_person
-            left join hrm_bio on (pr_person.id = hrm_bio.person_id)
-            left join pr_image on (pr_person.pe_id = pr_image.pe_id and pr_image.profile = 'T');
-        """,
-        as_dict = True)
+    ptable = s3db.pr_person
+    htable = s3db.hrm_bio
+    itable = s3db.pr_image
+
+    left = [htable.on(ptable.id==htable.person_id),
+            itable.on((ptable.pe_id==itable.pe_id) & (itable.profile == True))]
+    raw_rows = db().select(ptable.first_name,
+                           ptable.middle_name,
+                           ptable.last_name,
+                           htable.short_bio,
+                           itable.url,
+                           left = left)
 
     rows = []
+
     for raw_row in raw_rows:
         row = {}
 
-        fname = raw_row.get("first_name", "")
-        mname = raw_row.get("middle_name", "")
-        lname = raw_row.get("last_name", "")
+        # At least one name field will be present.
+        prow = raw_row.pr_person
+        fname = prow.first_name
+        mname = prow.middle_name
+        lname = prow.last_name
         row["name"] = s3_format_fullname(fname, mname, lname, False)
 
-        row["bio"] = raw_row.get("short_bio", "")
+        hrow = raw_row.get("hrm_bio", None)
+        if hrow:
+            row["bio"] = hrow.get("short_bio", "")
+        else:
+            row["bio"] = ""
 
-        row["picture"] = raw_row.get("url", "")
-        
+        irow = raw_row.get("pr_image", None)
+        if irow:
+            row["picture"] = irow.get("url", "")
+        else:
+            row["picture"] = ""
+
         rows.append(row)
 
     response.headers["Content-Type"] = "application/json"

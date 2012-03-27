@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    VITA Person Registry, Controllers
-
-    @author: nursix
-    @author: Pratyush Nigam <pratyush.nigam@gmail.com>
-    @see: U{http://eden.sahanafoundation.org/wiki/BluePrintVITA}
-"""
+""" Person Registry, Controllers """
 
 module = request.controller      # @ToDo: unify prefix and module across all controllers in some cleanup sprints
 prefix = request.controller

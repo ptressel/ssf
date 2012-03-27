@@ -41,7 +41,6 @@ __all__ = ["URL2",
            "s3_split_multi_value",
            "s3_get_db_field_value",
            "s3_filter_staff",
-           "s3_format_fullname",
            "s3_fullname",
            "s3_represent_facilities",
            "s3_represent_multiref",
@@ -446,37 +445,6 @@ def s3_filter_staff(r):
         pass
 
 # =============================================================================
-def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
-    """
-        Returns the full name of a person
-
-        @param fname: the person's pr_person.first_name value
-        @param mname: the person's pr_person.middle_name value
-        @param lname: the person's pr_person.last_name value
-        @param truncate: truncate the name to max 24 characters
-    """
-
-    name = ""
-    if fname or mname or lname:
-        if not fname:
-            fname = ""
-        if not mname:
-            mname = ""
-        if not lname:
-            lname = ""
-        if truncate:
-            fname = "%s" % s3_truncate(fname, 24)
-            mname = "%s" % s3_truncate(mname, 24)
-            lname = "%s" % s3_truncate(lname, 24, nice = False)
-        if not mname or mname.isspace():
-            name = ("%s %s" % (fname, lname)).rstrip()
-        else:
-            name = ("%s %s %s" % (fname, mname, lname)).rstrip()
-        if truncate:
-            name = s3_truncate(name, 24, nice = False)
-    return name
-
-# =============================================================================
 def s3_fullname(person=None, pe_id=None, truncate=True):
     """
         Returns the full name of a person
@@ -523,7 +491,27 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
                 mname = record.pr_person.middle_name.strip()
             if record.pr_person.last_name:
                 lname = record.pr_person.last_name.strip()
-        return s3_format_fullname(fname, mname, lname, truncate)
+
+        # Format the name
+        if fname or mname or lname:
+            if not fname:
+                fname = ""
+            if not mname:
+                mname = ""
+            if not lname:
+                lname = ""
+            if truncate:
+                fname = "%s" % s3_truncate(fname, 24)
+                mname = "%s" % s3_truncate(mname, 24)
+                lname = "%s" % s3_truncate(lname, 24, nice = False)
+            if not mname or mname.isspace():
+                name = ("%s %s" % (fname, lname)).rstrip()
+            else:
+                name = ("%s %s %s" % (fname, mname, lname)).rstrip()
+            if truncate:
+                name = s3_truncate(name, 24, nice = False)
+
+        return name
     else:
         return DEFAULT
 
